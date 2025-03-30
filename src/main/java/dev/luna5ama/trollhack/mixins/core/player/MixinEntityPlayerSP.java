@@ -6,7 +6,7 @@ import dev.luna5ama.trollhack.event.events.player.PlayerMoveEvent;
 import dev.luna5ama.trollhack.manager.managers.MessageManager;
 import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager;
 import dev.luna5ama.trollhack.module.modules.chat.PortalChat;
-import dev.luna5ama.trollhack.module.modules.exploit.AntiAntiBurrow;
+import dev.luna5ama.trollhack.module.modules.exploit.Satic;
 import dev.luna5ama.trollhack.module.modules.movement.Velocity;
 import dev.luna5ama.trollhack.module.modules.player.Freecam;
 import dev.luna5ama.trollhack.module.modules.player.SwingLimiter;
@@ -104,7 +104,7 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer {
                 break;
             }
             default: {
-                if (AntiAntiBurrow.INSTANCE.isEnabled() || Velocity.shouldCancelMove()) {
+                if (Satic.INSTANCE.isEnabled() || Velocity.shouldCancelMove()) {
                     ci.cancel();
                 }
             }

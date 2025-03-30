@@ -19,7 +19,6 @@ internal object CustomFont : Module(
     description = "Use the better font instead of the stupid Minecraft font",
     visible = false,
     category = Category.CLIENT,
-    alwaysEnabled = true
 ) {
     private const val DEFAULT_FONT_NAME = "Lexend Deca"
 
@@ -41,6 +40,16 @@ internal object CustomFont : Module(
     val baselineOffset get() = baselineOffsetSetting.value * 2.0f - 9.5f
 
     init {
+        onEnable {
+
+            MainFontRenderer.reloadFonts()
+                if (overrideMinecraft) {
+                    mc.fontRenderer.FONT_HEIGHT = MainFontRenderer.getHeight().ceilToInt()
+                }
+        }
+        onDisable {
+            mc.fontRenderer.FONT_HEIGHT = 9
+        }
         listener<TickEvent.Post>(true) {
             mc.fontRenderer.FONT_HEIGHT = if (overrideMinecraft) {
                 MainFontRenderer.getHeight().ceilToInt()

@@ -58,7 +58,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 
 internal object AutoHoleFill : Module(
-    name = "Auto Hole Fill",
+    name = "HoleFill",
     description = "Automatically fills hole while enemy walks into hole",
     category = Category.COMBAT,
     modulePriority = 100

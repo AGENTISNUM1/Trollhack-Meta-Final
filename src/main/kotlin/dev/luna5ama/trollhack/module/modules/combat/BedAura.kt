@@ -27,7 +27,9 @@ import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.ghostSwitch
 import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager.sendPlayerPacket
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
+import dev.luna5ama.trollhack.module.modules.combat.CrystalBasePlace.prePlace
 import dev.luna5ama.trollhack.module.modules.exploit.Bypass
+import dev.luna5ama.trollhack.module.modules.player.AutoEat
 import dev.luna5ama.trollhack.module.modules.player.PacketMine
 import dev.luna5ama.trollhack.util.Bind
 import dev.luna5ama.trollhack.util.EntityUtils.betterPosition
@@ -84,7 +86,7 @@ import kotlin.math.max
 
 @CombatManager.CombatModule
 internal object BedAura : Module(
-    name = "Bed Aura",
+    name = "BedAura",
     description = "Place bed and kills enemies",
     category = Category.COMBAT,
     modulePriority = 70
@@ -92,7 +94,10 @@ internal object BedAura : Module(
     private val page = setting("Page", Page.GENERAL)
 
     private val handMode by setting("Hand Mode", EnumHand.OFF_HAND, page.atValue(Page.GENERAL))
-    private val rotationPitch by setting("Rotation Pitch", 90, -90..90, 1, page.atValue(Page.GENERAL))
+    private val autoEat by setting("Enable AutoEat", false, page.atValue(Page.GENERAL))
+    private val autoPlaceStationary by setting("BasePlace", false, page.atValue(Page.GENERAL))
+    private val enablerotationPitch by setting("Enable Pitch", false, page.atValue(Page.GENERAL))
+    private val rotationPitch by setting("Rotation Pitch", 90, -90..90, 1, page.atValue(Page.GENERAL) and { enablerotationPitch })
     private val ghostSwitchBypass by setting(
         "Ghost Switch Bypass",
         HotbarSwitchManager.Override.NONE,
@@ -114,7 +119,7 @@ internal object BedAura : Module(
         page.atValue(Page.GENERAL) and ::antiBlocker
     )
     private val strictDirection by setting("Strict Direction", false, page.atValue(Page.GENERAL))
-    private val newPlacement by setting("1.13 Placement", false, page.atValue(Page.GENERAL))
+    val newPlacement by setting("1.13 Placement", false, page.atValue(Page.GENERAL))
     private val smartDamage by setting("Smart Damage", true, page.atValue(Page.GENERAL))
     private val damageStep by setting(
         "Damage Step",
@@ -130,52 +135,31 @@ internal object BedAura : Module(
     private val range by setting("Range", 5.4f, 0.0f..6.0f, 0.25f, page.atValue(Page.GENERAL))
 
     private val updateDelay by setting("Update Delay", 50, 5..250, 1, page.atValue(Page.TIMING))
-    private val timingMode by setting("Timing Mode", TimingMode.INSTANT, page.atValue(Page.TIMING))
+    private val autoSetSpeed by setting("Auto", false, page.atValue(Page.TIMING))
+    private val timingMode by setting("Timing Mode", TimingMode.INSTANT, page.atValue(Page.TIMING) and  { !autoSetSpeed })
     private val delay by setting(
         "Delay",
         75,
         0..1000,
         1,
-        page.atValue(Page.TIMING) and { timingMode != TimingMode.SWITCH })
+        page.atValue(Page.TIMING) and { autoSetSpeed || timingMode != TimingMode.SWITCH }
+    )
+
     private val placeDelay by setting(
         "Place Delay",
         25,
         0..1000,
         1,
-        page.atValue(Page.TIMING) and { timingMode == TimingMode.SWITCH })
+        page.atValue(Page.TIMING) and { autoSetSpeed || timingMode == TimingMode.SWITCH }
+    )
+
     private val breakDelay by setting(
         "Break Delay",
         50,
         0..1000,
         1,
-        page.atValue(Page.TIMING) and { timingMode == TimingMode.SWITCH })
-    private val slowMode by setting("Slow Mode", true, page.atValue(Page.TIMING))
-    private val slowModeDamage by setting(
-        "Slow Mode Damage",
-        4.0f,
-        0.0f..10.0f,
-        0.25f,
-        page.atValue(Page.TIMING) and ::slowMode
+        page.atValue(Page.TIMING) and { autoSetSpeed || timingMode == TimingMode.SWITCH }
     )
-    private val slowDelay by setting(
-        "Slow Delay",
-        250,
-        0..1000,
-        5,
-        page.atValue(Page.TIMING) and ::slowMode and { timingMode != TimingMode.SWITCH })
-    private val slowPlaceDelay by setting(
-        "Slow Place Delay",
-        250,
-        0..1000,
-        5,
-        page.atValue(Page.TIMING) and ::slowMode and { timingMode == TimingMode.SWITCH })
-    private val slowBreakDelay by setting(
-        "Slow Break Delay",
-        50,
-        0..1000,
-        5,
-        page.atValue(Page.TIMING) and ::slowMode and { smartDamage || timingMode == TimingMode.SWITCH })
-
     private val forcePlaceBind by setting("Force Place Bind", Bind(), {
         if (isEnabled && it) {
             toggleForcePlace = !toggleForcePlace
@@ -236,21 +220,28 @@ internal object BedAura : Module(
         0.25f,
         page.atValue(Page.MOTION_DETECT) and { motionDetect })
 
-    private val renderFoot by setting("Render Foot", true, page.atValue(Page.RENDER))
-    private val renderHead by setting("Render Head", true, page.atValue(Page.RENDER))
+    private val joinedRenders by setting("Joined Renders", false, page.atValue(Page.RENDER))
     private val renderBase by setting("Render Base", false, page.atValue(Page.RENDER))
     private val renderDamage by setting("Render Damage", true, page.atValue(Page.RENDER))
+    private val joinedColor by setting(
+        "Joined Color",
+        ColorRGB(255, 160, 255), // Default color (same as footColor)
+        false,
+        page.atValue(Page.RENDER) and { joinedRenders } // Only show when joinedRenders is enabled
+    )
+    private val renderFoot by setting("Render Foot", true, page.atValue(Page.RENDER) and { !joinedRenders })
+    private val renderHead by setting("Render Head", true, page.atValue(Page.RENDER) and { !joinedRenders })
     private val footColor by setting(
         "Foot Color",
         ColorRGB(255, 160, 255),
         false,
-        page.atValue(Page.RENDER) and ::renderFoot
+        page.atValue(Page.RENDER) and { !joinedRenders && renderFoot }
     )
     private val headColor by setting(
         "Head Color",
         ColorRGB(255, 32, 64),
         false,
-        page.atValue(Page.RENDER) and ::renderHead
+        page.atValue(Page.RENDER) and { !joinedRenders && renderHead }
     )
     private val baseColor by setting(
         "Base Color",
@@ -267,7 +258,7 @@ internal object BedAura : Module(
     }
 
     private enum class TimingMode {
-        INSTANT, SYNC, SWITCH
+        INSTANT, SWITCH
     }
 
     private val updateTimer = TickTimer()
@@ -275,6 +266,9 @@ internal object BedAura : Module(
     private val blockerExists = AtomicBoolean(true)
     private val blockerSwitch = AtomicBoolean(false)
     private val blockerTimer = TickTimer()
+
+    private var lastTargetPos: Vec3d? = null
+    private var stationaryStartTime = 0L
 
     private var switchPlacing = false
     private var placeInfo: PlaceInfo? = null
@@ -314,7 +308,11 @@ internal object BedAura : Module(
     }
 
     init {
+        onEnable {
+            if (autoEat && !AutoEat.isEnabled) AutoEat.enable()
+        }
         onDisable {
+            if (autoEat && AutoEat.isEnabled) AutoEat.disable()
             reset()
         }
 
@@ -365,7 +363,7 @@ internal object BedAura : Module(
                 val rotation = if (Bypass.blockPlaceRotation) {
                     getRotationTo(it.hitVec)
                 } else {
-                    Vec2f(it.direction.yaw, rotationPitch.toFloat())
+                    Vec2f(it.direction.yaw, if (enablerotationPitch) rotationPitch.toFloat() else player.rotationPitch)
                 }
 
                 sendPlayerPacket {
@@ -373,7 +371,6 @@ internal object BedAura : Module(
                 }
             }
         }
-
         safeListener<TickEvent.Post> {
             inactiveTicks++
             update()
@@ -422,10 +419,10 @@ internal object BedAura : Module(
 
         val validDamage = !smartDamage || shouldForcePlace || placeInfo.targetDamage - lastDamage >= damageStep
 
-        when (timingMode) {
-            TimingMode.INSTANT -> instantTiming(placeInfo, validDamage)
-            TimingMode.SYNC -> syncTiming(placeInfo, validDamage)
-            TimingMode.SWITCH -> switchTiming(placeInfo, validDamage)
+        val isTargetFalling = (CombatManager.target?.motionY ?: 0.0) != 0.0
+        when {
+            autoSetSpeed && isTargetFalling -> switchTiming(placeInfo, validDamage)
+            else -> instantTiming(placeInfo, validDamage)
         }
     }
 
@@ -440,45 +437,30 @@ internal object BedAura : Module(
 
     private fun SafeClientEvent.instantTiming(placeInfo: PlaceInfo, validDamage: Boolean) {
         if (validDamage) {
-            if (timer.tick(getDelay(placeInfo, delay, slowDelay))) {
+            if (timer.tick(delay)) {
                 placeBed(placeInfo)
                 breakBed(placeInfo)
             }
         } else {
-            breakIfPlaced(placeInfo, getDelay(placeInfo, delay, slowDelay))
-        }
-    }
-
-    private fun SafeClientEvent.syncTiming(placeInfo: PlaceInfo, validDamage: Boolean) {
-        if (validDamage) {
-            if (timer.tick(getDelay(placeInfo, delay, slowDelay))) {
-                if (isBedPlaced(placeInfo)) {
-                    breakBed(placeInfo)
-                } else {
-                    placeBed(placeInfo)
-                    breakBed(placeInfo)
-                }
-            }
-        } else {
-            breakIfPlaced(placeInfo, getDelay(placeInfo, delay, slowDelay))
+            breakIfPlaced(placeInfo, delay)
         }
     }
 
     private fun SafeClientEvent.switchTiming(placeInfo: PlaceInfo, validDamage: Boolean) {
         if (validDamage) {
             if (switchPlacing) {
-                if (timer.tick(getDelay(placeInfo, placeDelay, slowPlaceDelay))) {
+                if (timer.tick(placeDelay)) {
                     breakBed(placeInfo)
                     switchPlacing = !switchPlacing
                 }
             } else {
-                if (timer.tick(getDelay(placeInfo, breakDelay, slowBreakDelay))) {
+                if (timer.tick(breakDelay)) {
                     placeBed(placeInfo)
                     switchPlacing = !switchPlacing
                 }
             }
         } else {
-            breakIfPlaced(placeInfo, getDelay(placeInfo, breakDelay, slowBreakDelay))
+            breakIfPlaced(placeInfo, breakDelay)
         }
     }
 
@@ -492,7 +474,7 @@ internal object BedAura : Module(
 
     private fun SafeClientEvent.isBedPlaced(placeInfo: PlaceInfo): Boolean {
         return world.getBlock(placeInfo.bedPosFoot) == Blocks.BED
-            || world.getBlock(placeInfo.bedPosHead) == Blocks.BED
+                || world.getBlock(placeInfo.bedPosHead) == Blocks.BED
     }
 
     private fun SafeClientEvent.breakBed(placeInfo: PlaceInfo) {
@@ -518,8 +500,7 @@ internal object BedAura : Module(
         inactiveTicks = 0
     }
 
-    private fun SafeClientEvent.placeBed(placeInfo: PlaceInfo
-                                         ) {
+    private fun SafeClientEvent.placeBed(placeInfo: PlaceInfo) {
         val shouldSneak = !player.isSneaking
         if (shouldSneak) connection.sendPacket(CPacketEntityAction(player, CPacketEntityAction.Action.START_SNEAKING))
 
@@ -543,19 +524,6 @@ internal object BedAura : Module(
         inactiveTicks = 0
     }
 
-    private fun getDelay(placeInfo: PlaceInfo, delay: Int, slowDelay: Int): Int {
-        return if (slowMode
-            && !targetMoving
-            && !selfMoving
-            && CombatManager.target?.let { it.health > forcePlaceHealth } == true
-            && placeInfo.targetDamage < slowModeDamage
-        ) {
-            slowDelay
-        } else {
-            delay
-        }
-    }
-
     private fun SafeClientEvent.update() {
         if (player.dimension == 0 || !player.allSlotsPrioritized.hasItem(Items.BED)) {
             reset()
@@ -565,6 +533,17 @@ internal object BedAura : Module(
             }
         }
 
+        // Track target position for automatic placement
+        CombatManager.target?.let { target ->
+            val currentPos = target.positionVector
+            if (currentPos != lastTargetPos) {
+                lastTargetPos = currentPos
+                stationaryStartTime = System.currentTimeMillis()
+            } else if (autoPlaceStationary && System.currentTimeMillis() - stationaryStartTime >= 1000L) {
+                prePlace(minDamage)
+                stationaryStartTime = System.currentTimeMillis() // Reset timer after placement
+            }
+        }
 
         selfMoving = motionDetect && CombatManager.trackerSelf?.let { it.motion.length() > selfMotion } ?: false
         targetMoving = motionDetect && CombatManager.trackerTarget?.let { it.motion.length() > targetMotion } ?: false
@@ -673,10 +652,10 @@ internal object BedAura : Module(
         val footBlock = footState.block
 
         return (checkBedBlock(ignoreNonFullBox, calcInfo.bedPosFoot, footState) || footBlock == Blocks.BED)
-            && (checkBedBlock(ignoreNonFullBox, calcInfo.bedPosHead, headState)
-            || headBlock == Blocks.BED
-            && headState.getValue(BlockBed.PART) == BlockBed.EnumPartType.HEAD
-            && headState.getValue(BlockBed.FACING) == calcInfo.side)
+                && (checkBedBlock(ignoreNonFullBox, calcInfo.bedPosHead, headState)
+                || headBlock == Blocks.BED
+                && headState.getValue(BlockBed.PART) == BlockBed.EnumPartType.HEAD
+                && headState.getValue(BlockBed.FACING) == calcInfo.side)
     }
 
     private fun checkBedBlock(
@@ -686,8 +665,8 @@ internal object BedAura : Module(
     ): Boolean {
         val block = state.block
         return block == Blocks.AIR
-            || assumeInstantMine && PacketMine.isInstantMining(pos)
-            || ignoreNonFullBox && !blockBlacklist.contains(block) && block != Blocks.BED && !state.isFullBox
+                || assumeInstantMine && PacketMine.isInstantMining(pos)
+                || ignoreNonFullBox && !blockBlacklist.contains(block) && block != Blocks.BED && !state.isFullBox
     }
 
     private fun checkDamage(
@@ -713,7 +692,7 @@ internal object BedAura : Module(
         return if (scaledHealth - selfDamage > noSuicide
             && checkSelfDamage(selfDamage)
             && (checkDamage(targetDamage, diff)
-                || checkForcePlaceDamage(targetDamage, diff))
+                    || checkForcePlaceDamage(targetDamage, diff))
         ) {
             DamageInfo(
                 calcInfo.side,
@@ -735,7 +714,7 @@ internal object BedAura : Module(
 
     private fun checkDamage(targetDamage: Float, diff: Float): Boolean {
         return (targetMoving && targetDamage >= motionMinDamage || targetDamage >= minDamage)
-            && (targetMoving && diff >= motionDamageBalance || diff >= damageBalance)
+                && (targetMoving && diff >= motionDamageBalance || diff >= damageBalance)
     }
 
     private fun checkForcePlaceDamage(targetDamage: Float, diff: Float): Boolean {
@@ -891,12 +870,12 @@ internal object BedAura : Module(
                     }
 
                     GlStateManager.pushMatrix()
-                     GlStateManager.translate(
+                    GlStateManager.translate(
                         (renderPos.x - mc.renderManager.renderPosX).toFloat(),
                         (renderPos.y - mc.renderManager.renderPosY).toFloat(),
                         (renderPos.z - mc.renderManager.renderPosZ).toFloat()
                     )
-                     GlStateManager.rotate(
+                    GlStateManager.rotate(
                         renderRotation,
                         0.0f,
                         1.0f,
@@ -910,11 +889,21 @@ internal object BedAura : Module(
                     if (renderBase) {
                         renderer.add(boxBase, baseColor)
                     }
-                    if (renderFoot) {
-                        renderer.add(boxFoot, footColor, EnumFacingMask.ALL xor EnumFacingMask.SOUTH)
-                    }
-                    if (renderHead) {
-                        renderer.add(boxHead, headColor, EnumFacingMask.ALL xor EnumFacingMask.NORTH)
+
+                    if (joinedRenders) {
+                        // Render a single rectangle for the bed using the joined color
+                        val boxBed = AxisAlignedBB(
+                            -0.5, 0.0, -1.0,
+                            0.5, 0.5625, 1.0
+                        )
+                        renderer.add(boxBed, joinedColor)
+                    } else {
+                        if (renderFoot) {
+                            renderer.add(boxFoot, footColor, EnumFacingMask.ALL xor EnumFacingMask.SOUTH)
+                        }
+                        if (renderHead) {
+                            renderer.add(boxHead, headColor, EnumFacingMask.ALL xor EnumFacingMask.NORTH)
+                        }
                     }
 
                     RenderUtils3D.resetTranslation()

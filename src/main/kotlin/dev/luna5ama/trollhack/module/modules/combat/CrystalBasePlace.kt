@@ -126,7 +126,7 @@ internal object CrystalBasePlace : Module(
         }
     }
 
-    private fun SafeClientEvent.prePlace(minDamageInc: Float) {
+    fun SafeClientEvent.prePlace(minDamageInc: Float) {
         if (rotationTo != null || !timer.tick(delay)) return
 
         val slot = player.hotbarSlots.firstBlock(Blocks.OBSIDIAN) ?: return

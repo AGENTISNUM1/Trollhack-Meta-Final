@@ -14,7 +14,7 @@ internal object TPS : LabelHud(
 ) {
 
     // Buffered TPS readings to add some fluidity to the TPS HUD element
-    private val tpsBuffer = CircularArray(120, 20.0f)
+    public val tpsBuffer = CircularArray(120, 20.0f)
 
     override fun SafeClientEvent.updateText() {
         tpsBuffer.add(TpsCalculator.tickRate)

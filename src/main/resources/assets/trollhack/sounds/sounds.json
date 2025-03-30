@@ -1,0 +1,17 @@
+{
+  "amongus": {
+    "category": "player",
+    "subtitle": "amongus",
+    "sounds": [{ "name": "trollhack:amongus.ogg", "stream": false }]
+  },
+  "bong": {
+    "category": "player",
+    "subtitle": "bong",
+    "sounds": [{ "name": "trollhack:bong.ogg", "stream": false }]
+  },
+  "fortnite": {
+    "category": "player",
+    "subtitle": "fortnite",
+    "sounds": [{ "name": "trollhack:fortnite.ogg", "stream": false }]
+  }
+}

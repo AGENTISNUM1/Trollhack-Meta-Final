@@ -8,13 +8,17 @@ import dev.luna5ama.trollhack.event.events.*
 import dev.luna5ama.trollhack.event.events.player.HotbarUpdateEvent
 import dev.luna5ama.trollhack.event.events.player.InteractEvent
 import dev.luna5ama.trollhack.event.events.player.OnUpdateWalkingPlayerEvent
+import dev.luna5ama.trollhack.event.events.render.Render2DEvent
 import dev.luna5ama.trollhack.event.events.render.Render3DEvent
 import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.event.safeConcurrentListener
 import dev.luna5ama.trollhack.event.safeListener
 import dev.luna5ama.trollhack.graphics.ESPRenderer
 import dev.luna5ama.trollhack.graphics.Easing
+import dev.luna5ama.trollhack.graphics.ProjectionUtils
 import dev.luna5ama.trollhack.graphics.color.ColorRGB
+import dev.luna5ama.trollhack.graphics.color.setGLColor
+import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.ghostSwitch
 import dev.luna5ama.trollhack.manager.managers.InventoryTaskManager
@@ -43,6 +47,7 @@ import dev.luna5ama.trollhack.util.world.canBreakBlock
 import dev.luna5ama.trollhack.util.world.getMiningSide
 import dev.luna5ama.trollhack.util.world.isAir
 import net.minecraft.block.state.IBlockState
+import net.minecraft.client.gui.FontRenderer
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.init.Blocks
 import net.minecraft.init.Enchantments
@@ -54,9 +59,11 @@ import net.minecraft.util.EnumHand
 import net.minecraft.util.math.AxisAlignedBB
 import net.minecraft.util.math.BlockPos
 import kotlin.collections.set
+import kotlin.math.max
+import kotlin.math.pow
 
 internal object PacketMine : Module(
-    name = "Packet Mine",
+    name = "PacketMine",
     alias = arrayOf("InstantMine"),
     category = Category.PLAYER,
     description = "Break block with packet",
@@ -83,17 +90,34 @@ internal object PacketMine : Module(
     private val miningTaskTimeout by setting("Mining Task Timeout", 3000, 0..10000, 50)
     private val range by setting("Range", 4.5f, 0.0f..10.0f, 0.1f)
     private val removeOutOfRange by setting("Remove Out Of Range", false)
-
+    private val useCustomColor by setting("Use Custom Color", false)
+    private val customColor by setting("Custom Color", ColorRGB(255, 255, 255), false, { useCustomColor })
+    private val RenderModeSetting by setting("Render Mode", RenderMode.NORMAL)
+    private val showPercentage by setting("Show Percentage", true)
     private val clickTimer = TickTimer()
     private val renderer = ESPRenderer().apply { aFilled = 31; aOutline = 233 }
     private val packetTimer = TickTimer()
     private var miningInfo0: MiningInfo? = null
     private var breakConfirm: BreakConfirmInfo? = null
     val miningInfo: IMiningInfo? get() = miningInfo0
-
     private val miningQueue = HashMap<AbstractModule, MiningTask>().synchronized()
-
     private var lastTask: InventoryTask? = null
+    private var rise = false
+    private var reverse = false
+
+    private enum class RenderMode {
+        RISE, REVERSE, NORMAL, TOP_TO_DOWN, INOUT
+    }
+
+    private fun assign() {
+        when (RenderModeSetting) {
+            RenderMode.NORMAL -> { rise = false; reverse = false }
+            RenderMode.RISE -> { rise = true; reverse = false }
+            RenderMode.REVERSE -> { reverse = true; rise = false }
+            RenderMode.TOP_TO_DOWN -> { rise = false; reverse = false }
+            RenderMode.INOUT -> { rise = false; reverse = false }
+        }
+    }
 
     private enum class MiningMode(override val displayName: CharSequence, val continous: Boolean) : DisplayEnum {
         NORMAL_ONCE(TranslateType.SPECIFIC key "Normal Once", false),
@@ -124,15 +148,104 @@ internal object PacketMine : Module(
             }
         }
 
-        listener<Render3DEvent> {
-            miningInfo0?.let {
-                val multiplier = Easing.OUT_CUBIC.inc(Easing.toDelta(it.startTime, it.length))
-                val box = AxisAlignedBB(it.pos).scale(multiplier.toDouble())
-                val color = if (it.isAir) ColorRGB(32, 255, 32) else ColorRGB(255, 32, 32)
+        safeListener<Render2DEvent.Absolute> {
+            miningInfo0?.let { miningInfo ->
+                if (showPercentage) {
+                    val progress = ((System.currentTimeMillis() - miningInfo.startTime) / miningInfo.length.toFloat()).coerceIn(0f, 1f)
+                    val progressText = "${(progress * 100).toInt()}%"
 
-                renderer.add(box, color)
-                renderer.render(true)
+                    // Calculate color based on progress (green to red gradient)
+                    val color = when {
+                        progress < 0.5f -> ColorRGB(
+                            (255 * (progress * 2)).toInt(),
+                            255,
+                            0
+                        )
+                        else -> ColorRGB(
+                            255,
+                            (255 * ((1 - progress) * 2)).toInt(),
+                            0
+                        )
+                    }
+
+                    val center = miningInfo.pos.toVec3dCenter()
+                    val screenPos = ProjectionUtils.toAbsoluteScreenPos(center)
+                    val distFactor = max(ProjectionUtils.distToCamera(center) - 1.0, 0.0)
+                    val scale = max(3.0f / 2.0.pow(distFactor).toFloat(), 1.0f)
+
+                    // Draw using Minecraft's font renderer
+                    val fr: FontRenderer = mc.fontRenderer
+                    val width = fr.getStringWidth(progressText) * scale
+                    val height = fr.FONT_HEIGHT * scale
+
+                    fr.drawString(
+                        progressText,
+                        (screenPos.x - width / 2).toFloat(),
+                        (screenPos.y - height / 2).toFloat(),
+                        color.rFloat.toInt(),
+                        false
+                    )
+                }
             }
+        }
+
+        safeListener<Render3DEvent> {
+            miningInfo0?.let { miningInfo ->
+                val progress = ((System.currentTimeMillis() - miningInfo.startTime) / miningInfo.length.toFloat()).coerceIn(0f, 1f)
+                val color = if (useCustomColor) customColor else if (miningInfo.isAir) ColorRGB(32, 255, 32) else ColorRGB(255, 32, 32)
+
+                when (RenderModeSetting) {
+                    RenderMode.RISE -> {
+                        val height = progress.toDouble()
+                        val box = AxisAlignedBB(
+                            miningInfo.pos.x.toDouble(),
+                            miningInfo.pos.y.toDouble(),
+                            miningInfo.pos.z.toDouble(),
+                            miningInfo.pos.x + 1.0,
+                            miningInfo.pos.y + height,
+                            miningInfo.pos.z + 1.0
+                        )
+                        renderer.add(box, color)
+                    }
+                    RenderMode.TOP_TO_DOWN -> {
+                        val height = 1.0 - progress.toDouble()
+                        val box = AxisAlignedBB(
+                            miningInfo.pos.x.toDouble(),
+                            miningInfo.pos.y + height,
+                            miningInfo.pos.z.toDouble(),
+                            miningInfo.pos.x + 1.0,
+                            miningInfo.pos.y + 1.0,
+                            miningInfo.pos.z + 1.0
+                        )
+                        renderer.add(box, color)
+                    }
+                    RenderMode.REVERSE -> {
+                        val reverseProgress = 1.0 - progress
+                        val multiplier = Easing.OUT_CUBIC.inc(reverseProgress.toFloat())
+                        val box = AxisAlignedBB(miningInfo.pos).scale(multiplier.toDouble())
+                        renderer.add(box, color)
+                    }
+                    RenderMode.INOUT -> {
+                        // Render normal animation
+                        val normalMultiplier = Easing.OUT_CUBIC.inc(progress.toFloat())
+                        val normalBox = AxisAlignedBB(miningInfo.pos).scale(normalMultiplier.toDouble())
+                        renderer.add(normalBox, color)
+
+                        // Render reverse animation
+                        val reverseProgress = 1.0 - progress
+                        val reverseMultiplier = Easing.OUT_CUBIC.inc(reverseProgress.toFloat())
+                        val reverseBox = AxisAlignedBB(miningInfo.pos).scale(reverseMultiplier.toDouble())
+                        renderer.add(reverseBox, color)
+                    }
+                    else -> {
+                        val multiplier = Easing.OUT_CUBIC.inc(progress.toFloat())
+                        val box = AxisAlignedBB(miningInfo.pos).scale(multiplier.toDouble())
+                        renderer.add(box, color)
+                    }
+                }
+            }
+
+            renderer.render(true)
         }
 
         safeListener<PacketEvent.Receive> { event ->
@@ -176,7 +289,7 @@ internal object PacketMine : Module(
                 miningInfo0?.let {
                     if (!it.isAir
                         && (miningMode == MiningMode.CONTINUOUS_INSTANT && it.mined
-                            || it.endTime - System.currentTimeMillis() <= rotateTime)
+                                || it.endTime - System.currentTimeMillis() <= rotateTime)
                     ) {
                         sendPlayerPacket {
                             rotate(getRotationTo(it.pos.toVec3dCenter()))
@@ -308,6 +421,7 @@ internal object PacketMine : Module(
             if (prev == null || prev.pos != pos || prev.priority != priority) {
                 miningQueue[module] = MiningTask(module, pos, priority, once)
             }
+
             updateMining()
         }
     }
@@ -348,11 +462,11 @@ internal object PacketMine : Module(
                 }
 
                 if (!world.canBreakBlock(task.pos)) {
-                    miningQueue.remove(task.owner) // Remove invalid tasks
+                    miningQueue.remove(task.owner)
                     continue
                 }
                 if ((!miningMode.continous || task.once) && world.isAir(task.pos)) {
-                    miningQueue.remove(task.owner) // Remove finished tasks
+                    miningQueue.remove(task.owner)
                     continue
                 }
 
@@ -416,7 +530,7 @@ internal object PacketMine : Module(
 
     private fun isFinished(miningInfo: MiningInfo, blockState: IBlockState): Boolean {
         return (!miningInfo.isAir || blockState.block != Blocks.AIR)
-            && (miningMode == MiningMode.CONTINUOUS_INSTANT && miningInfo.mined || System.currentTimeMillis() > miningInfo.endTime)
+                && (miningMode == MiningMode.CONTINUOUS_INSTANT && miningInfo.mined || System.currentTimeMillis() > miningInfo.endTime)
     }
 
     private fun SafeClientEvent.calcBreakTime(pos: BlockPos): Int {
@@ -498,8 +612,8 @@ internal object PacketMine : Module(
 
     fun isInstantMining(pos: BlockPos): Boolean {
         return isEnabled
-            && miningMode == MiningMode.CONTINUOUS_INSTANT
-            && miningInfo0?.let { it.mined && it.pos == pos } ?: false
+                && miningMode == MiningMode.CONTINUOUS_INSTANT
+                && miningInfo0?.let { it.mined && it.pos == pos } ?: false
     }
 
     private class MiningTask(val owner: AbstractModule, val pos: BlockPos, val priority: Int, val once: Boolean) :

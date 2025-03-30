@@ -1,0 +1,15 @@
+{
+  "amongus": {
+    "category": "ambient",
+    "sounds": [ "trollhack:amongus" ]
+  },
+
+  "kill_sound_nl": {
+    "category": "ambient",
+    "sounds": [ "trollhack:bong" ]
+  },
+  "health": {
+    "category": "ambient",
+    "sounds": [ "trollhack:fortnite" ]
+  }
+}

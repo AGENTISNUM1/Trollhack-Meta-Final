@@ -60,6 +60,7 @@ internal object Watermark : LabelHud(
 
     override fun SafeClientEvent.updateText() {
         displayText.add(TrollHackMod.NAME, GuiSetting.primary)
+        displayText.add(" - Wizard edition")
         displayText.add(TrollHackMod.VERSION, GuiSetting.text)
     }
 }

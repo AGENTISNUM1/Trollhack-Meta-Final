@@ -13,6 +13,7 @@ import dev.luna5ama.trollhack.module.modules.exploit.Burrow
 import dev.luna5ama.trollhack.util.EntityUtils.betterPosition
 import dev.luna5ama.trollhack.util.interfaces.DisplayEnum
 import dev.luna5ama.trollhack.util.math.vector.distanceSqToCenter
+import dev.luna5ama.trollhack.util.text.NoSpamMessage
 import net.minecraft.block.Block
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.init.Blocks
@@ -77,7 +78,7 @@ internal object BreakWarning : Module(
         val box = blockState.getCollisionBoundingBox(world, packet.position) ?: return false
         if (!player.entityBoundingBox.intersects(box.offset(packet.position))) return false
 
-        Notification.send(hash(packet, 1), "${player.name} is breaking your burrow!")
+        NoSpamMessage.sendMessage("${player.name} is breaking your burrow!")
 
         return true
     }
@@ -99,7 +100,7 @@ internal object BreakWarning : Module(
             if (packet.position.y != playerPos.y || xDiff > 1 || zDiff > 1 || xDiff + zDiff != 1) return false
         }
 
-        Notification.send(hash(packet, 2), "${player.name} is breaking your surround!")
+        NoSpamMessage.sendMessage("${player.name} is breaking your surround!")
 
         return true
     }
@@ -112,7 +113,7 @@ internal object BreakWarning : Module(
 
         if (player.distanceSqToCenter(packet.position) > range * range) return false
 
-        Notification.send(hash(packet, 3), "${player.name} is breaking block near you!")
+        NoSpamMessage.sendMessage("${player.name} is breaking block near you!")
 
         return true
     }

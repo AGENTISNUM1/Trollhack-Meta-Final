@@ -41,6 +41,7 @@ internal object AutoEat : Module(
     private var eating = false
     private var lastTask: InventoryTask? = null
 
+
     override fun isActive(): Boolean {
         return isEnabled && eating
     }
@@ -95,6 +96,7 @@ internal object AutoEat : Module(
     private fun SafeClientEvent.shouldEat() =
         player.foodStats.foodLevel < belowHunger
             || player.scaledHealth < belowHealth
+
 
     private fun SafeClientEvent.eat(hand: EnumHand) {
         if (!eating || !player.isHandActive || player.activeHand != hand) {

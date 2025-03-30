@@ -35,13 +35,12 @@ internal object MainMenu : AbstractModule(
     name = "Main Menu",
     description = "Better Main Menu",
     category = Category.CLIENT,
-    visible = false,
-    alwaysEnabled = true,
+    visible = false, // Changed to true to make it toggleable
     config = GenericConfig
 ) {
     private val title by setting("Title", Title.TROLL_HACK)
     private val mode by setting("Mode", Mode.SET)
-    private val backgroundShader by setting("Background Shader", ShaderEnum.GALAXY, { mode == Mode.SET })
+    private val backgroundShader by setting("Background Shader", ShaderEnum.GALAXY, { mode == Mode.SET && isEnabled}) // Added isEnabled check
     private val fpsLimit by setting("Fps Limit", 60, 10..240, 10)
 
     @Suppress("unused")
@@ -84,7 +83,7 @@ internal object MainMenu : AbstractModule(
 
     init {
         listener<GuiEvent.Displayed> {
-            if (it.screen is GuiMainMenu) {
+            if (it.screen is GuiMainMenu && isEnabled) { // Added isEnabled check
                 it.screen = TrollGuiMainMenu()
             }
         }
@@ -93,12 +92,14 @@ internal object MainMenu : AbstractModule(
 
     @JvmStatic
     fun handleGetLimitFramerate(cir: CallbackInfoReturnable<Int>) {
-        if (mc.world == null && mc.currentScreen != null) {
+        if (mc.world == null && mc.currentScreen != null && isEnabled) { // Added isEnabled check
             cir.returnValue = fpsLimit
         }
     }
 
     private fun renderBackground() {
+        if (!isEnabled) return // Don't render custom background if disabled
+
         val width = mc.displayWidth * AntiAlias.sampleLevel
         val height = mc.displayHeight * AntiAlias.sampleLevel
         val mouseX = Mouse.getX() - 1.0f
@@ -108,6 +109,7 @@ internal object MainMenu : AbstractModule(
     }
 
     private fun resetBackground() {
+        if (!isEnabled) return // Don't reset background if disabled
         currentShader = getShader()
     }
 
@@ -140,6 +142,11 @@ internal object MainMenu : AbstractModule(
         }
 
         override fun initGui() {
+            if (!MainMenu.isEnabled) {
+                mc.displayGuiScreen(GuiMainMenu()) // Fall back to normal main menu if disabled
+                return
+            }
+
             resetBackground()
 
             buttons.forEach {
@@ -154,6 +161,11 @@ internal object MainMenu : AbstractModule(
         }
 
         override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
+            if (!MainMenu.isEnabled) {
+                super.drawScreen(mouseX, mouseY, partialTicks) // Fall back to normal rendering if disabled
+                return
+            }
+
             renderBackground()
 
             GlStateUtils.rescaleActual()
@@ -173,6 +185,11 @@ internal object MainMenu : AbstractModule(
         }
 
         override fun handleMouseInput() {
+            if (!MainMenu.isEnabled) {
+                super.handleMouseInput() // Fall back to normal input handling if disabled
+                return
+            }
+
             val mouseX = Mouse.getEventX() - 1.0f
             val mouseY = mc.displayHeight - Mouse.getEventY() - 1.0f
             val button = Mouse.getEventButton()
@@ -192,6 +209,11 @@ internal object MainMenu : AbstractModule(
         }
 
         override fun keyTyped(typedChar: Char, keyCode: Int) {
+            if (!MainMenu.isEnabled) {
+                super.keyTyped(typedChar, keyCode) // Fall back to normal key handling if disabled
+                return
+            }
+
             when (typedChar) {
                 's', 'S' -> singlePlayerButton.action.invoke()
                 'm', 'M' -> multiPlayerButton.action.invoke()

@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import it.unimi.dsi.fastutil.ints.IntSets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.init.SoundEvents
 import net.minecraft.network.play.server.SPacketChat
@@ -49,7 +50,7 @@ internal object AutoEZ : Module(
     private val popNotification by setting("Pop Notification", true)
     private val showPopCount by setting("Show Pop Count", true)
     private val resetOnDeath by setting("Reset Pop Count On Death", true)
-
+    private val delay = setting("Delay", 10, 1..180, 1, description = "Delay between messages, in seconds")
     private val ezFile = File("${TrollHackMod.DIRECTORY}/autoez.txt")
     private val popFile = File("${TrollHackMod.DIRECTORY}/autopop.txt")
     private val ezMessages = ArrayList<String>().synchronized()
@@ -122,20 +123,21 @@ internal object AutoEZ : Module(
             if (showPopCount) {
                 message = message.replace(COUNT_PLACEHOLDER, currentCount.toString())
             }
+            if (timer.tickAndReset(delay.value, TimeUnit.SECONDS)) {
+                if (FriendManager.isFriend(playerName)) {
+                    sendServerMessage("My friend $playerName has popped a totem (Total: $currentCount)")
+                } else {
+                    sendServerMessage(message)
+                }
 
-            if (FriendManager.isFriend(playerName)) {
-                sendServerMessage("My friend $playerName has popped a totem (Total: $currentCount)")
-            } else {
-                sendServerMessage(message)
-                sendServerMessage("/w $playerName ➏ⓨ◘ⷡ╊❣╀⅁Ⅲ⾗\u2EF9\u2064ⅰ⓮ℳ⍈ⷲ⧓⌚⚑�☯�❄碼點果使ↆ⦱➞⟝▶⬮❥☁♚⾔Ⲁ⒓⦛⪲⣯▧┎◮♵⬱ⓥ㘁㜁㠁㔁꤁넁瀁⨁⬁㈁ᜁ묁萁蔁蘁蜁蠁㜁㠁✌䈁䌁☻☠䐁䔁䘁�ⓘӨ山⎊⯨⓿⨼✐░凹♥ᗩ♏\uFE0E♐□⬥\uD83D\uDDB4ÃｅỖ⬔⬢★ⶮ⦐⨒Ⰿ☹⃜✒ↇℇ⿁⎡ℇ☪◼▛ⓤ⌬⚧⽎⇨⪌♢➩◒Ⲭ⃧☘✘♞⦇❑♶◵⺶☻⚐�☞�✌⓭⇕ↅ✠⓳⓴⓵㉝㊂�ⓚ嘁圁堁夁❶⍓⇰�ΛЩ₳】")
+                if (popNotification) {
+                    Notification.send(
+                        "${TextFormatting.RED}$playerName ${TextFormatting.RESET}popped a totem! (Total: $currentCount)",
+                        5000L
+                    )
+                }
             }
 
-            if (popNotification) {
-                Notification.send(
-                    "${TextFormatting.RED}$playerName ${TextFormatting.RESET}popped a totem! (Total: $currentCount)",
-                    5000L
-                )
-            }
         }
     }
 
@@ -218,7 +220,7 @@ internal object AutoEZ : Module(
         }?.let {
             attackedPlayers.remove(it)
             confirmedKills.remove(it.entityId)
-            popCountMap.remove(it.name) // Remove pop count when player dies
+            popCountMap.remove(it.name)
 
             if (ezMessages.isEmpty()) {
                 NoSpamMessage.sendError("$chatName No AutoEZ messages loaded!")
@@ -227,13 +229,21 @@ internal object AutoEZ : Module(
 
             val randomMessage = ezMessages[Random.nextInt(ezMessages.size)]
             val replaced = randomMessage.replace(NAME_PLACEHOLDER, it.name)
+            if (timer.tickAndReset(delay.value, TimeUnit.SECONDS)) {
+                if (notification) {
+                    Notification.send("${TextFormatting.RED}${it.name} ${TextFormatting.RESET}was killed by you", 5000L)
+                }
 
-            if (notification) {
-                Notification.send("${TextFormatting.RED}${it.name} ${TextFormatting.RESET}was killed by you", 5000L)
+                sendServerMessage(replaced)
+                Companion.mc.soundHandler.playSound(
+                    PositionedSoundRecord.getRecord(
+                        getSound(),
+                        1.0f,
+                        1.0f
+                    ))} else {
+                return
             }
 
-            sendServerMessage(replaced)
-            mc.player.playSound(getSound(), 1.0f, 1.0f)
         }
     }
 

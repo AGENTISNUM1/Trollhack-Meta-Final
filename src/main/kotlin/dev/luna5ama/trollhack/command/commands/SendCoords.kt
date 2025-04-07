@@ -1,6 +1,7 @@
 package dev.luna5ama.trollhack.command.commands
 
 import dev.luna5ama.trollhack.command.ClientCommand
+import dev.luna5ama.trollhack.command.commands.FriendCommand.player
 import dev.luna5ama.trollhack.util.text.NoSpamMessage
 import net.minecraft.entity.player.EntityPlayer
 
@@ -12,8 +13,7 @@ object SendCoords : ClientCommand(
     init {
         player("Player") { playerArg ->
             executeSafe {
-                mc.player.sendChatMessage("/w ${playerArg.value} My coordinates are ${pos()} in the ${getdim()}")
-                NoSpamMessage.sendMessage("just sent the message \"/w ${playerArg.value} My coordinates are ${pos()} in the ${getdim()}\"")
+                mc.player.sendChatMessage("/w ${playerArg.value.name} My coordinates are ${pos()} in the ${getdim()}")
             }
         }
 

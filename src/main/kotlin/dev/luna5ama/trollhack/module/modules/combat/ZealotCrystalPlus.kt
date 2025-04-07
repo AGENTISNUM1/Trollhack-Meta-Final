@@ -24,7 +24,7 @@ import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.serverSideIte
 import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager.sendPlayerPacket
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.module.modules.exploit.Bypass
 import dev.luna5ama.trollhack.module.modules.player.PacketMine
 import dev.luna5ama.trollhack.util.EntityUtils.eyePosition
@@ -551,7 +551,7 @@ internal object ZealotCrystalPlus : Module(
         safeListener<RenderEntityEvent.Model.Pre> {
             if (!it.cancelled && isValidEntityForRendering(targetChams, it.entity)) {
                 glDepthRange(0.0, 0.01)
-                GuiSetting.primary.alpha(chamsAlpha).setGLColor()
+                ClickGUI.primary.alpha(chamsAlpha).setGLColor()
                 GlStateManager.disableTexture2D()
                 GlStateManager.disableLighting()
                 GlStateManager.enableBlend()
@@ -2029,7 +2029,7 @@ internal object ZealotCrystalPlus : Module(
 
                         renderer.aFilled = (filledAlpha * scale).toInt()
                         renderer.aOutline = (outlineAlpha * scale).toInt()
-                        renderer.add(box, GuiSetting.primary)
+                        renderer.add(box, ClickGUI.primary)
                         renderer.render(false)
 
                         lastRenderPos = renderPos

@@ -9,7 +9,7 @@ import dev.luna5ama.trollhack.graphics.color.ColorRGB
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.hudgui.HudElement
 import dev.luna5ama.trollhack.gui.hudgui.TrollHudGui
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.delegate.FrameFloat
 import dev.luna5ama.trollhack.util.text.format
 import it.unimi.dsi.fastutil.HashCommon
@@ -229,8 +229,8 @@ internal object Notification : HudElement(
         }
 
         companion object {
-            val color get() = if (nvidia) ColorRGB(118, 185, 0) else GuiSetting.primary.alpha(255)
-            val backGroundColor get() = if (nvidia) ColorRGB(0, 0, 0, backgroundAlpha) else GuiSetting.backGround
+            val color get() = if (nvidia) ColorRGB(118, 185, 0) else ClickGUI.primary.alpha(255)
+            val backGroundColor get() = if (nvidia) ColorRGB(0, 0, 0, backgroundAlpha) else ClickGUI.backGround
 
             val minWidth get() = 150.0f
 

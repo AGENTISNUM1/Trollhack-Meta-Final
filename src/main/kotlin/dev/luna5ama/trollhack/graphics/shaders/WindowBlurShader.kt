@@ -9,7 +9,7 @@ import dev.luna5ama.trollhack.graphics.MatrixUtils
 import dev.luna5ama.trollhack.graphics.buffer.PersistentMappedVBO
 import dev.luna5ama.trollhack.graphics.buildAttribute
 import dev.luna5ama.trollhack.graphics.use
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.structs.Vec4f32
 import dev.luna5ama.trollhack.util.interfaces.Helper
 import net.minecraft.client.renderer.GlStateManager
@@ -56,7 +56,7 @@ object WindowBlurShader : AlwaysListening, Helper {
     }
 
     fun render(x1: Float, y1: Float, x2: Float, y2: Float) {
-        val pass = GuiSetting.windowBlurPass
+        val pass = ClickGUI.windowBlurPass
         if (pass == 0) return
 
         setTextureParam(mc.framebuffer.framebufferTexture)

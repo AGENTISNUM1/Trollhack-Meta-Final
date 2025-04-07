@@ -1,6 +1,5 @@
 package dev.luna5ama.trollhack.mixins.core.render;
 
-import dev.luna5ama.trollhack.module.modules.render.ESP;
 import dev.luna5ama.trollhack.module.modules.render.Nametags;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
@@ -21,7 +20,5 @@ abstract class MixinRender<T extends Entity> {
 
     @Inject(method = "getTeamColor", at = @At("HEAD"), cancellable = true)
     public void getTeamColor$Inject$HEAD(T entityIn, CallbackInfoReturnable<Integer> cir) {
-        Integer color = ESP.getEspColor(entityIn);
-        if (color != null) cir.setReturnValue(color);
     }
 }

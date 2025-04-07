@@ -4,6 +4,7 @@ import dev.fastmc.common.TickTimer
 import dev.fastmc.common.TimeUnit
 import dev.luna5ama.trollhack.TrollHackMod
 import dev.luna5ama.trollhack.event.events.ConnectionEvent
+import dev.luna5ama.trollhack.event.events.GuiEvent
 import dev.luna5ama.trollhack.event.events.TickEvent
 import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.event.safeListener
@@ -17,8 +18,9 @@ import dev.luna5ama.trollhack.setting.ModuleConfig
 import dev.luna5ama.trollhack.setting.configs.AbstractConfig
 import dev.luna5ama.trollhack.setting.configs.IConfig
 import dev.luna5ama.trollhack.setting.settings.impl.primitive.StringSetting
+import dev.luna5ama.trollhack.translation.TranslationManager
 import dev.luna5ama.trollhack.util.ConfigUtils
-import dev.luna5ama.trollhack.util.atTrue
+import dev.luna5ama.trollhack.util.Wrapper
 import dev.luna5ama.trollhack.util.interfaces.DisplayEnum
 import dev.luna5ama.trollhack.util.text.NoSpamMessage
 import dev.luna5ama.trollhack.util.text.formatValue
@@ -26,34 +28,46 @@ import dev.luna5ama.trollhack.util.threads.DefaultScope
 import dev.luna5ama.trollhack.util.threads.TimerScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import net.minecraft.client.gui.GuiMainMenu
 import java.io.File
 import java.io.IOException
 import java.nio.file.Paths
 
-internal object Configurations : AbstractModule(
-    name = "Configurations",
-    description = "Setting up configurations of the client",
+internal object ClientSettings : AbstractModule(
+    name = "Client Settings",
+    description = "Various settings to configure the client",
     category = Category.CLIENT,
     alwaysEnabled = true,
     visible = false,
     config = GenericConfig
 ) {
+    private val page by setting("Page", Page.CONFIG)
     private const val defaultPreset = "default"
 
-    private val autoSaving0 = setting("Auto Saving", true)
+    // Chat Page
+    val messagedelay by setting("Chat Message Delay", 500, 0..20000, 50, { page == Page.CHAT })
+    val maxMessageQueueSize by setting("Max Message Queue Size", 50, 10..200, 5, { page == Page.CHAT })
+    var prefix by setting("Prefix", ";", { page == Page.CHAT })
+
+    // Configs Page
+    private val autoSaving0 = setting("Auto Saving", true, { page == Page.CONFIG })
     private val autoSaving by autoSaving0
-    private val savingFeedBack by setting("Saving FeedBack", false, autoSaving0.atTrue())
+    private val savingFeedBack by setting("Saving FeedBack", false, { autoSaving0.value && page == Page.CONFIG })
     private val savingInterval by setting(
         "Interval",
         10,
         1..30,
         1,
-        autoSaving0.atTrue(),
+        { autoSaving0.value && page == Page.CONFIG },
         description = "Frequency of auto saving in minutes"
     )
-    val serverPreset by setting("Server Preset", false)
-    private val guiPresetSetting = setting("Gui Preset", defaultPreset)
-    private val modulePresetSetting = setting("Module Preset", defaultPreset)
+    val serverPreset by setting("Server Preset", false, { page == Page.CONFIG })
+    private val guiPresetSetting = setting("Gui Preset", defaultPreset, { page == Page.CONFIG })
+    private val modulePresetSetting = setting("Module Preset", defaultPreset, { page == Page.CONFIG })
+
+    // Language Page
+    private val overrideLanguage = setting("Override Language", false, { page == Page.LANGUAGE })
+    private val language = setting("Language", "en_us", { overrideLanguage.value && page == Page.LANGUAGE})
 
     val guiPreset by guiPresetSetting
     val modulePreset by modulePresetSetting
@@ -64,9 +78,14 @@ internal object Configurations : AbstractModule(
     init {
         TimerScope.launchLooping("Config Auto Saving", 60000L) {
             if (autoSaving && mc.currentScreen !is AbstractTrollGui && timer.tickAndReset(savingInterval.toLong())) {
-                if (savingFeedBack) NoSpamMessage.sendMessage(this@Configurations, "Auto saving settings...")
+                if (savingFeedBack) NoSpamMessage.sendMessage(this@ClientSettings, "Auto saving settings...")
                 else TrollHackMod.logger.info("Auto saving settings...")
                 ConfigUtils.saveAll()
+            }
+        }
+        listener<GuiEvent.Displayed>(114514) {
+            if (it.screen is GuiMainMenu || it.screen is MainMenu.TrollGuiMainMenu) {
+                TranslationManager.reload()
             }
         }
 
@@ -136,7 +155,22 @@ internal object Configurations : AbstractModule(
             modulePresetSetting.consumers.add(this)
         }
     }
+    val settingLanguage: String
+        get() = if (overrideLanguage.value) {
+            language.value
+        } else {
+            Wrapper.minecraft.gameSettings.language
+        }
 
+    init {
+        overrideLanguage.listeners.add {
+            TranslationManager.reload()
+        }
+
+        language.listeners.add {
+            TranslationManager.reload()
+        }
+    }
     @Suppress("UNUSED")
     enum class ConfigType(
         override val displayName: CharSequence,
@@ -339,5 +373,8 @@ internal object Configurations : AbstractModule(
         } else {
             true
         }
+    }
+    private enum class Page(){
+        LANGUAGE, CONFIG, CHAT
     }
 }

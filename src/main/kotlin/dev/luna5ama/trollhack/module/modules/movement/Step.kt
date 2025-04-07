@@ -26,15 +26,15 @@ internal object Step : Module(
     category = Category.MOVEMENT,
     modulePriority = 200
 ) {
-    private val mode by setting("Mode", Mode.PACKET)
+    var mode by setting("Mode", Mode.PACKET)
     private val entityStep by setting("Entity Step", true)
-    private val useTimer by setting("Use Timer", true, { mode == Mode.PACKET })
+    var useTimer by setting("Use Timer", true, { mode == Mode.PACKET })
     private val strictYMotion by setting("Strict Y Motion", true)
     private val autoDisable by setting("Auto Disable", false)
-    private val minHeight by setting("Min Height", 0.9f, 0.6f..2.5f, 0.1f)
-    val maxHeight by setting("Max Height", 2.0f, 0.6f..2.5f, 0.1f)
+    var minHeight by setting("Min Height", 0.9f, 0.6f..2.5f, 0.1f)
+    var maxHeight by setting("Max Height", 2.0f, 0.6f..2.5f, 0.1f)
     private val enableTicks by setting("Enable Ticks", 0, 0..50, 1)
-    private val postTimer by setting("Post Timer", 0.8f, 0.01f..1.0f, 0.01f)
+    var postTimer by setting("Post Timer", 0.8f, 0.01f..1.0f, 0.01f)
     private val maxPostTicks by setting("Max Post Ticks", 40, 0..100, 1)
 
     const val DEFAULT_HEIGHT = 0.6f
@@ -44,7 +44,7 @@ internal object Step : Module(
     private var collideTicks = 0
 
     @Suppress("UNUSED")
-    private enum class Mode {
+    enum class Mode {
         VANILLA, PACKET
     }
 

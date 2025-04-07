@@ -1,22 +1,19 @@
 package dev.luna5ama.trollhack.gui.hudgui.elements.client
 
-import dev.fastmc.common.DoubleBuffered
 import dev.fastmc.common.TimeUnit
 import dev.fastmc.common.collection.FastIntMap
-import dev.fastmc.common.collection.FastObjectArrayList
 import dev.fastmc.common.sort.ObjectIntrosort
 import dev.luna5ama.trollhack.event.events.TickEvent
 import dev.luna5ama.trollhack.event.safeParallelListener
 import dev.luna5ama.trollhack.graphics.Easing
 import dev.luna5ama.trollhack.graphics.RenderUtils2D
 import dev.luna5ama.trollhack.graphics.color.ColorRGB
-import dev.luna5ama.trollhack.graphics.color.ColorUtils
 import dev.luna5ama.trollhack.graphics.font.TextComponent
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.hudgui.HudElement
 import dev.luna5ama.trollhack.module.AbstractModule
 import dev.luna5ama.trollhack.module.ModuleManager
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.atTrue
 import dev.luna5ama.trollhack.util.delegate.AsyncCachedValue
 import dev.luna5ama.trollhack.util.delegate.FrameFloat
@@ -35,15 +32,22 @@ internal object ActiveModules : HudElement(
     description = "List of enabled modules",
     enabledByDefault = true
 ) {
+    // Display settings
     private val mode by setting("Mode", Mode.LEFT_TAG)
     private val sortingMode by setting("Sorting Mode", SortingMode.LENGTH)
     private val showInvisible by setting("Show Invisible", false)
     private val bindOnly by setting("Bind Only", true, { !showInvisible })
-    private val rainbow0 = setting("Rainbow", true)
+
+    // Gradient settings
+    private val gradientMode by setting("Gradient Mode", GradientMode.ANIMATED_GRADIENT)
+    var color1 by setting("Primary Color", ColorRGB(20, 235, 20), false, { gradientMode != GradientMode.RAINBOW })
+    val color2 by setting("Secondary Color", ColorRGB(20, 235, 20), false, { gradientMode != GradientMode.RAINBOW })
+    private val gradientSpeed by setting("Animation Speed", 1.0f, 0.1f..5.0f, 0.1f)
+
+    // Rainbow settings (only visible when in rainbow mode)
+    private val rainbow0 = setting("Rainbow", true, { gradientMode == GradientMode.RAINBOW })
     private val rainbow by rainbow0
-    private val rainbowLength by setting("Rainbow Length", 10.0f, 1.0f..20.0f, 0.5f, rainbow0.atTrue())
-    private val indexedHue by setting("Indexed Hue", 0.5f, 0.0f..1.0f, 0.05f, rainbow0.atTrue())
-    private val saturation by setting("Saturation", 0.5f, 0.0f..1.0f, 0.01f, rainbow0.atTrue())
+    private val saturation by setting("Saturation", 0.8f, 0.0f..1.0f, 0.01f, rainbow0.atTrue())
     private val brightness by setting("Brightness", 1.0f, 0.0f..1.0f, 0.01f, rainbow0.atTrue())
 
     private enum class Mode {
@@ -52,7 +56,12 @@ internal object ActiveModules : HudElement(
         FRAME
     }
 
-    @Suppress("UNUSED")
+    private enum class GradientMode {
+        RAINBOW,
+        STATIC_GRADIENT,
+        ANIMATED_GRADIENT
+    }
+
     private enum class SortingMode(
         override val displayName: CharSequence,
         val keySelector: (AbstractModule) -> Comparable<*>
@@ -166,96 +175,84 @@ internal object ActiveModules : HudElement(
         }
         ObjectIntrosort.sort(sortArray)
 
-        if (rainbow) {
-            val lengthMs = rainbowLength * 1000.0f
-            val timedHue = System.currentTimeMillis() % lengthMs.toLong() / lengthMs
-            var index = 0
+        val totalModules = sortArray.count { toggleMap[it.module.id]?.value == true }
+        var visibleIndex = 0
+        val timeFactor = (System.currentTimeMillis() % 10000L) / 10000.0f * gradientSpeed
 
-            for (pair in sortArray) {
-                val module = pair.module
-                val timedFlag = toggleMap[module.id] ?: continue
-                val progress = timedFlag.progress
+        for (pair in sortArray) {
+            val module = pair.module
+            val timedFlag = toggleMap[module.id] ?: continue
+            val progress = timedFlag.progress
 
-                if (progress <= 0.0f) continue
+            if (progress <= 0.0f) continue
 
-                GlStateManager.pushMatrix()
-
-                val hue = timedHue + indexedHue * 0.05f * index
-                val color = ColorUtils.hsbToRGB(hue, saturation, brightness)
-
-                val textLine = module.textLine
-                val textWidth = textLine.getWidth()
-                val animationXOffset = textWidth * dockingH.offset * (1.0f - progress)
-                val stringPosX = textWidth * dockingH.multiplier
-                val margin = 2.0f * dockingH.offset
-
-                var yOffset = timedFlag.displayHeight
-
-                GlStateManager.translate(animationXOffset - margin - stringPosX, 0.0f, 0.0f)
-
-                when (mode) {
-                    Mode.LEFT_TAG -> {
-                        RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, GuiSetting.backGround)
-                        RenderUtils2D.drawRectFilled(-4.0f, 0.0f, -2.0f, yOffset, color)
-                    }
-                    Mode.RIGHT_TAG -> {
-                        RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, GuiSetting.backGround)
-                        RenderUtils2D.drawRectFilled(textWidth + 2.0f, 0.0f, textWidth + 4.0f, yOffset, color)
-                    }
-                    Mode.FRAME -> {
-                        RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, GuiSetting.backGround)
+            val ratio = visibleIndex.toFloat() / totalModules.coerceAtLeast(1)
+            val color = when (gradientMode) {
+                GradientMode.RAINBOW -> {
+                    val hue = (ratio + timeFactor) % 1.0f
+                    ColorRGB.fromHSB(hue, saturation, brightness)
+                }
+                GradientMode.STATIC_GRADIENT -> {
+                    ColorRGB.lerp(color1, color2, ratio)
+                }
+                GradientMode.ANIMATED_GRADIENT -> {
+                    val lerpProgress = (ratio + timeFactor) % 1.0f
+                    when {
+                        lerpProgress < 0.5f -> ColorRGB.lerp(
+                            color1,
+                            color2,
+                            lerpProgress * 2.0f
+                        )
+                        else -> ColorRGB.lerp(
+                            color2,
+                            color1,
+                            (lerpProgress - 0.5f) * 2.0f
+                        )
                     }
                 }
-
-                module.newTextLine(color).drawLine(progress, dev.luna5ama.trollhack.graphics.HAlign.LEFT)
-
-                if (dockingV == dev.luna5ama.trollhack.graphics.VAlign.BOTTOM) yOffset *= -1.0f
-                GlStateManager.popMatrix()
-                GlStateManager.translate(0.0f, yOffset, 0.0f)
-                index++
             }
-        } else {
-            val color = GuiSetting.primary
-            for (pair in sortArray) {
-                val module = pair.module
-                val timedFlag = toggleMap[module.id] ?: continue
-                val progress = timedFlag.progress
 
-                if (progress <= 0.0f) continue
+            drawModule(module, color)
+            visibleIndex++
+        }
+    }
 
-                GlStateManager.pushMatrix()
+    private fun drawModule(module: AbstractModule, color: ColorRGB) {
+        val timedFlag = toggleMap[module.id] ?: return
+        val progress = timedFlag.progress
+        if (progress <= 0.0f) return
 
-                val textLine = module.textLine
-                val textWidth = textLine.getWidth()
-                val animationXOffset = textWidth * dockingH.offset * (1.0f - progress)
-                val stringPosX = textWidth * dockingH.multiplier
-                val margin = 2.0f * dockingH.offset
+        GlStateManager.pushMatrix()
 
-                var yOffset = timedFlag.displayHeight
+        val textLine = module.newTextLine(color)
+        val textWidth = textLine.getWidth()
+        val animationXOffset = textWidth * dockingH.offset * (1.0f - progress)
+        val stringPosX = textWidth * dockingH.multiplier
+        val margin = 2.0f * dockingH.offset
 
-                GlStateManager.translate(animationXOffset - margin - stringPosX, 0.0f, 0.0f)
+        var yOffset = timedFlag.displayHeight
 
-                when (mode) {
-                    Mode.LEFT_TAG -> {
-                        RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, GuiSetting.backGround)
-                        RenderUtils2D.drawRectFilled(-4.0f, 0.0f, -2.0f, yOffset, color)
-                    }
-                    Mode.RIGHT_TAG -> {
-                        RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, GuiSetting.backGround)
-                        RenderUtils2D.drawRectFilled(textWidth + 2.0f, 0.0f, textWidth + 4.0f, yOffset, color)
-                    }
-                    Mode.FRAME -> {
-                        RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, GuiSetting.backGround)
-                    }
-                }
+        GlStateManager.translate(animationXOffset - margin - stringPosX, 0.0f, 0.0f)
 
-                textLine.drawLine(progress, dev.luna5ama.trollhack.graphics.HAlign.LEFT)
-
-                if (dockingV == dev.luna5ama.trollhack.graphics.VAlign.BOTTOM) yOffset *= -1.0f
-                GlStateManager.popMatrix()
-                GlStateManager.translate(0.0f, yOffset, 0.0f)
+        when (mode) {
+            Mode.LEFT_TAG -> {
+                RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, ClickGUI.backGround)
+                RenderUtils2D.drawRectFilled(-4.0f, 0.0f, -2.0f, yOffset, color)
+            }
+            Mode.RIGHT_TAG -> {
+                RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, ClickGUI.backGround)
+                RenderUtils2D.drawRectFilled(textWidth + 2.0f, 0.0f, textWidth + 4.0f, yOffset, color)
+            }
+            Mode.FRAME -> {
+                RenderUtils2D.drawRectFilled(-2.0f, 0.0f, textWidth + 2.0f, yOffset, ClickGUI.backGround)
             }
         }
+
+        textLine.drawLine(progress, dev.luna5ama.trollhack.graphics.HAlign.LEFT)
+
+        if (dockingV == dev.luna5ama.trollhack.graphics.VAlign.BOTTOM) yOffset *= -1.0f
+        GlStateManager.popMatrix()
+        GlStateManager.translate(0.0f, yOffset, 0.0f)
     }
 
     private val AbstractModule.textLine
@@ -263,7 +260,7 @@ internal object ActiveModules : HudElement(
             this.newTextLine()
         }
 
-    private fun AbstractModule.newTextLine(color: ColorRGB = GuiSetting.primary) =
+    private fun AbstractModule.newTextLine(color: ColorRGB = ClickGUI.primary) =
         TextComponent.TextLine(" ").apply {
             add(TextComponent.TextElement(nameAsString, color))
             getHudInfo().let {

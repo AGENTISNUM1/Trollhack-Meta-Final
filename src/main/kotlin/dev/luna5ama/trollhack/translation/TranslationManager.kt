@@ -1,7 +1,7 @@
 package dev.luna5ama.trollhack.translation
 
 import dev.luna5ama.trollhack.TrollHackMod
-import dev.luna5ama.trollhack.module.modules.client.Language
+import dev.luna5ama.trollhack.module.modules.client.ClientSettings
 import dev.luna5ama.trollhack.util.readText
 import dev.luna5ama.trollhack.util.threads.DefaultScope
 import dev.luna5ama.trollhack.util.threads.isActiveOrFalse
@@ -53,7 +53,7 @@ object TranslationManager {
     }
 
     fun TranslationKey.getTranslated(): String {
-        if (Language.settingLanguage.startsWith("en")) {
+        if (ClientSettings.settingLanguage.startsWith("en")) {
             return rootString
         }
 
@@ -70,7 +70,7 @@ object TranslationManager {
     }
 
     fun reload() {
-        val language = Language.settingLanguage.lowercase(Locale.ROOT)
+        val language = ClientSettings.settingLanguage.lowercase(Locale.ROOT)
 
         try {
             val (content, source) = tryRead(language)
@@ -141,7 +141,7 @@ object TranslationManager {
     }
 
     fun update() {
-        val file = File("$I18N_LOCAL_DIR/${Language.settingLanguage}.lang")
+        val file = File("$I18N_LOCAL_DIR/${ClientSettings.settingLanguage}.lang")
         file.createNewFile()
         file.bufferedWriter().use { writer ->
             TranslationKey.allKeys

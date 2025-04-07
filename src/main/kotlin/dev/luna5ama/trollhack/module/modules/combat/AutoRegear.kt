@@ -69,15 +69,15 @@ internal object AutoRegear : Module(
     category = Category.COMBAT
 ) {
     private val regearKey by setting("Place Shulker Key", Bind(), { if (it) placeShulker = true })
-    private val placeRange by setting("Place Range", 4.0f, 1.0f..6.0f, 0.1f)
-    private val shulkearBoxOnly by setting("Shulker Box Only", true)
+    var placeRange by setting("Place Range", 4.0f, 1.0f..6.0f, 0.1f)
+    val shulkearBoxOnly by setting("Shulker Box Only", true)
     private val hideInventory by setting("Hide Inventory", false)
     private val closeInventory by setting("Close Inventory", false)
     private val takeArmor by setting("Take Armor", false)
     private val regearTimeout by setting("Regear Timeout", 500, 0..5000, 10)
-    private val clickDelayMs by setting("Click Delay ms", 10, 0..1000, 1)
-    private val postDelayMs by setting("Post Delay ms", 50, 0..1000, 1)
-    private val moveTimeoutMs by setting("Move Timeout ms", 100, 0..1000, 1)
+    var clickDelayMs by setting("Click Delay ms", 10, 0..1000, 1)
+    var postDelayMs by setting("Post Delay ms", 50, 0..1000, 1)
+    var moveTimeoutMs by setting("Move Timeout ms", 100, 0..1000, 1)
     private val renderColor by setting("Render Color", ColorRGB(255, 255, 255))
     private val renderDelay by setting("Render Delay", 100, 0..1000, 10)
 

@@ -7,7 +7,7 @@ import dev.luna5ama.trollhack.event.safeParallelListener
 import dev.luna5ama.trollhack.graphics.RenderUtils2D
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.rgui.windows.BasicWindow
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.setting.GuiConfig
 import dev.luna5ama.trollhack.setting.GuiConfig.setting
 import dev.luna5ama.trollhack.setting.configs.AbstractConfig
@@ -36,7 +36,7 @@ abstract class AbstractHudElement(
     IListenerOwner by ListenerOwner() {
 
     val bind by setting("Bind", Bind())
-    val scale by setting("Scale", 1.0f, 0.1f..4.0f, 0.05f)
+    var scale by setting("Scale", 1.0f, 0.1f..4.0f, 0.05f)
     val default = setting("Default", false, isTransient = true)
 
     override val resizable = false
@@ -91,8 +91,8 @@ abstract class AbstractHudElement(
     open fun renderHud() {}
 
     open fun renderFrame() {
-        RenderUtils2D.drawRectFilled(renderWidth, renderHeight, GuiSetting.backGround)
-        RenderUtils2D.drawRectOutline(renderWidth, renderHeight, 1.0f, GuiSetting.primary)
+        RenderUtils2D.drawRectFilled(renderWidth, renderHeight, ClickGUI.backGround)
+        RenderUtils2D.drawRectOutline(renderWidth, renderHeight, 1.0f, ClickGUI.primary)
     }
 
     init {

@@ -1,15 +1,12 @@
 package dev.luna5ama.trollhack.gui.hudgui.elements.misc
 
-import dev.fastmc.common.sort.IntComparator
-import dev.fastmc.common.sort.IntIntrosort
 import dev.fastmc.common.sort.LongComparator
 import dev.fastmc.common.sort.LongIntrosort
 import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.event.events.RunGameLoopEvent
 import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.gui.hudgui.LabelHud
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
-import it.unimi.dsi.fastutil.ints.IntArrayList
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import it.unimi.dsi.fastutil.longs.LongArrayList
 
 internal object Fps : LabelHud(
@@ -53,17 +50,17 @@ internal object Fps : LabelHud(
     override fun SafeClientEvent.updateText() {
         val shortFrameTime = shortFrameTimeList.average()
 
-        displayText.add("Fps", GuiSetting.primary)
+        displayText.add("Fps", ClickGUI.primary)
         addFps(shortFrameTime)
 
         if (showAverage) {
-            displayText.add("Avg.", GuiSetting.primary)
+            displayText.add("Avg.", ClickGUI.primary)
             addFps(longFrameTimeList.average())
         }
 
         if (showMin) {
             val minFrameTime = longFrameTimeList.maxByOrNull { it.frameTime }?.frameTime ?: 0
-            displayText.add("Min", GuiSetting.primary)
+            displayText.add("Min", ClickGUI.primary)
             addFps(minFrameTime)
         }
 
@@ -78,21 +75,21 @@ internal object Fps : LabelHud(
             }
             if (show1Low) {
                 val time = if (sorted.isNotEmpty()) sorted.getLong(sorted.size / 100) else 0
-                displayText.add("1% Low", GuiSetting.primary)
+                displayText.add("1% Low", ClickGUI.primary)
                 addFps(time)
             }
             if (show5Low) {
                 val time = if (sorted.isNotEmpty()) sorted.getLong(sorted.size / 20) else 0
-                displayText.add("5% Low", GuiSetting.primary)
+                displayText.add("5% Low", ClickGUI.primary)
                 addFps(time)
             }
         }
     }
 
     private fun addFps(time: Long) {
-        displayText.add((1000_000_000.0 / time).toInt().toString(), GuiSetting.text)
+        displayText.add((1000_000_000.0 / time).toInt().toString(), ClickGUI.text)
         if (showFrameTime) {
-            displayText.add("(%.2f ms)".format(time / 1_000_000.0), GuiSetting.text)
+            displayText.add("(%.2f ms)".format(time / 1_000_000.0), ClickGUI.text)
         }
     }
 

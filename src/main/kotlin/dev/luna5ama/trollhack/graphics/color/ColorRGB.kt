@@ -20,7 +20,6 @@ value class ColorRGB(val rgba: Int) {
         this((r * 255.0f).toInt(), (g * 255.0f).toInt(), (b * 255.0f).toInt(), (a * 255.0f).toInt())
 
 
-    // Int color
     val r: Int
         get() = rgba shr 24 and 255
 
@@ -98,6 +97,48 @@ value class ColorRGB(val rgba: Int) {
             (a + other.a) / 2
         )
     }
+    companion object {
+        fun lerp(start: ColorRGB, end: ColorRGB, progress: Float): ColorRGB {
+            val invProgress = 1.0f - progress
+            return ColorRGB(
+                (start.rFloat * invProgress + end.rFloat * progress).coerceIn(0f, 1f),
+                (start.gFloat * invProgress + end.gFloat * progress).coerceIn(0f, 1f),
+                (start.bFloat * invProgress + end.bFloat * progress).coerceIn(0f, 1f),
+                (start.aFloat * invProgress + end.aFloat * progress).coerceIn(0f, 1f)
+            )
+        }
+
+        fun multiLerp(colors: List<ColorRGB>, progress: Float): ColorRGB {
+            if (colors.isEmpty()) return ColorRGB(255, 255, 255)
+            if (colors.size == 1) return colors[0]
+
+            val segmentSize = 1.0f / (colors.size - 1)
+            val segment = (progress / segmentSize).toInt().coerceAtMost(colors.size - 2)
+            val segmentProgress = (progress - segment * segmentSize) / segmentSize
+
+            return lerp(colors[segment], colors[segment + 1], segmentProgress)
+        }
+
+        fun fromHSB(h: Float, s: Float, b: Float, a: Float = 1.0f): ColorRGB {
+            val rgb = java.awt.Color.HSBtoRGB(h, s, b)
+            return ColorRGB(
+                (rgb shr 16) and 0xFF,
+                (rgb shr 8) and 0xFF,
+                rgb and 0xFF,
+                (a * 255).toInt()
+            )
+        }
+    }
+
+    fun ColorRGB.darker(factor: Float): ColorRGB {
+        return ColorRGB(
+            (rFloat * (1 - factor)).coerceIn(0f, 1f),
+            (gFloat * (1 - factor)).coerceIn(0f, 1f),
+            (bFloat * (1 - factor)).coerceIn(0f, 1f),
+            aFloat
+        )
+    }
+
 
     fun toArgb() = ColorUtils.rgbaToArgb(rgba)
 

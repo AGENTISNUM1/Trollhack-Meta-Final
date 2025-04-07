@@ -9,7 +9,7 @@ import dev.luna5ama.trollhack.gui.IGuiScreen
 import dev.luna5ama.trollhack.gui.rgui.Component
 import dev.luna5ama.trollhack.gui.rgui.InteractiveComponent
 import dev.luna5ama.trollhack.gui.rgui.MouseState
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.module.modules.render.AntiAlias
 import dev.luna5ama.trollhack.util.delegate.FrameFloat
 import dev.luna5ama.trollhack.util.extension.sumOfFloat
@@ -38,8 +38,8 @@ open class ListWindow(
 
     override val resizable: Boolean get() = hoveredChild == null
 
-    private val xMargin get() = GuiSetting.xMargin
-    private val yMargin get() = GuiSetting.yMargin
+    private val xMargin get() = ClickGUI.xMargin
+    private val yMargin get() = ClickGUI.yMargin
 
     var hoveredChild: Component? = null
         private set(value) {
@@ -66,7 +66,7 @@ open class ListWindow(
 
     private val optimalHeight0 = FrameFloat {
         val sum = children.asSequence().filter(Component::visible).sumOfFloat { it.height + yMargin }
-        sum + draggableHeight + max(GuiSetting.xMargin, GuiSetting.yMargin)
+        sum + draggableHeight + max(ClickGUI.xMargin, ClickGUI.yMargin)
     }
     protected val optimalHeight by optimalHeight0
 
@@ -173,10 +173,10 @@ open class ListWindow(
         val sampleLevel = AntiAlias.sampleLevel
 
         GlStateUtils.scissor(
-            (((renderPosX + xMargin) * GuiSetting.scaleFactor - 0.5f) * sampleLevel).floorToInt(),
-            (mc.displayHeight * sampleLevel - ((renderPosY * sampleLevel + renderHeight * sampleLevel) * GuiSetting.scaleFactor - 0.5f)).floorToInt(),
-            (((renderWidth - xMargin * 2.0f) * GuiSetting.scaleFactor + 1.0f) * sampleLevel).ceilToInt(),
-            (((renderHeight - draggableHeight) * GuiSetting.scaleFactor) * sampleLevel).ceilToInt()
+            (((renderPosX + xMargin) * ClickGUI.scaleFactor - 0.5f) * sampleLevel).floorToInt(),
+            (mc.displayHeight * sampleLevel - ((renderPosY * sampleLevel + renderHeight * sampleLevel) * ClickGUI.scaleFactor - 0.5f)).floorToInt(),
+            (((renderWidth - xMargin * 2.0f) * ClickGUI.scaleFactor + 1.0f) * sampleLevel).ceilToInt(),
+            (((renderHeight - draggableHeight) * ClickGUI.scaleFactor) * sampleLevel).ceilToInt()
         )
         glEnable(GL_SCISSOR_TEST)
          GlStateManager.translate(0.0f, -scrollProgress, 0.0f)

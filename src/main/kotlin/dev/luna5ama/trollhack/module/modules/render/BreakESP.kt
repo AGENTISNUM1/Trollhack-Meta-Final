@@ -21,7 +21,7 @@ import kotlin.math.max
 import kotlin.math.pow
 
 internal object BreakESP : Module(
-    name = "Break ESP",
+    name = "BreakESP",
     description = "Highlights blocks being broken nearby",
     category = Category.RENDER
 ) {
@@ -30,6 +30,7 @@ internal object BreakESP : Module(
     private val color by setting("Color", ColorRGB(200, 205, 210), false)
     private val aFilled by setting("Filled Alpha", 31, 0..255, 1)
     private val aOutline by setting("Outline Alpha", 255, 0..255, 1)
+    private val rise by setting("Rise", false) // New setting for bottom-to-top fill animation
 
     private val renderer = ESPRenderer()
 
@@ -56,7 +57,23 @@ internal object BreakESP : Module(
 
             for (progress in mc.renderGlobal.damagedBlocks.values) {
                 if (isInvalidBreaker(progress)) continue
-                val box = getBoundingBox(progress.position, progress.partialBlockDamage + 1)
+
+                val progressPercent = (progress.partialBlockDamage + 1) / 10.0
+                val box = if (rise) {
+                    // Fill the block from bottom to top
+                    AxisAlignedBB(
+                        progress.position.x.toDouble(),
+                        progress.position.y.toDouble(),
+                        progress.position.z.toDouble(),
+                        progress.position.x + 1.0,
+                        progress.position.y + progressPercent,
+                        progress.position.z + 1.0
+                    )
+                } else {
+                    // Shrink the block based on progress
+                    getBoundingBox(progress.position, progress.partialBlockDamage + 1)
+                }
+
                 renderer.add(box, color)
             }
 
@@ -67,7 +84,6 @@ internal object BreakESP : Module(
     private fun SafeClientEvent.getBoundingBox(pos: BlockPos, progress: Int): AxisAlignedBB {
         return getBoundingBox(pos).scale(progress / 10.0)
     }
-
 
     private fun SafeClientEvent.getBoundingBox(pos: BlockPos): AxisAlignedBB {
         return world.getSelectedBox(pos)

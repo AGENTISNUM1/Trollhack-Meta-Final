@@ -29,7 +29,7 @@ import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
 import dev.luna5ama.trollhack.module.modules.combat.CrystalBasePlace.prePlace
 import dev.luna5ama.trollhack.module.modules.exploit.Bypass
-import dev.luna5ama.trollhack.module.modules.player.AutoEat
+import dev.luna5ama.trollhack.module.modules.wizard.AutoEatPlus
 import dev.luna5ama.trollhack.module.modules.player.PacketMine
 import dev.luna5ama.trollhack.util.Bind
 import dev.luna5ama.trollhack.util.EntityUtils.betterPosition
@@ -95,10 +95,11 @@ internal object BedAura : Module(
 
     private val handMode by setting("Hand Mode", EnumHand.OFF_HAND, page.atValue(Page.GENERAL))
     private val autoEat by setting("Enable AutoEat", false, page.atValue(Page.GENERAL))
+    private val antifire by setting("AntiFire", false, page.atValue(Page.GENERAL))
     private val autoPlaceStationary by setting("BasePlace", false, page.atValue(Page.GENERAL))
-    private val enablerotationPitch by setting("Enable Pitch", false, page.atValue(Page.GENERAL))
+    var enablerotationPitch by setting("Enable Pitch", false, page.atValue(Page.GENERAL))
     private val rotationPitch by setting("Rotation Pitch", 90, -90..90, 1, page.atValue(Page.GENERAL) and { enablerotationPitch })
-    private val ghostSwitchBypass by setting(
+    var ghostSwitchBypass by setting(
         "Ghost Switch Bypass",
         HotbarSwitchManager.Override.NONE,
         page.atValue(Page.GENERAL) and ::handMode.atValue(EnumHand.MAIN_HAND)
@@ -120,24 +121,24 @@ internal object BedAura : Module(
     )
     private val strictDirection by setting("Strict Direction", false, page.atValue(Page.GENERAL))
     val newPlacement by setting("1.13 Placement", false, page.atValue(Page.GENERAL))
-    private val smartDamage by setting("Smart Damage", true, page.atValue(Page.GENERAL))
-    private val damageStep by setting(
+    var smartDamage by setting("Smart Damage", true, page.atValue(Page.GENERAL))
+    val damageStep by setting(
         "Damage Step",
         2.0f,
         0.0f..5.0f,
         0.1f,
         page.atValue(Page.GENERAL) and ::smartDamage
     )
-    private val noSuicide by setting("No Suicide", 8.0f, 0.0f..20.0f, 0.25f, page.atValue(Page.GENERAL))
-    private val minDamage by setting("Min Damage", 6.0f, 0.0f..20.0f, 0.25f, page.atValue(Page.GENERAL))
-    private val maxSelfDamage by setting("Max Self Damage", 6.0f, 0.0f..20.0f, 0.25f, page.atValue(Page.GENERAL))
-    private val damageBalance by setting("Damage Balance", -2.5f, -10.0f..10.0f, 0.25f, page.atValue(Page.GENERAL))
-    private val range by setting("Range", 5.4f, 0.0f..6.0f, 0.25f, page.atValue(Page.GENERAL))
+    var noSuicide by setting("No Suicide", 8.0f, 0.0f..20.0f, 0.25f, page.atValue(Page.GENERAL))
+    var minDamage by setting("Min Damage", 6.0f, 0.0f..20.0f, 0.25f, page.atValue(Page.GENERAL))
+    var maxSelfDamage by setting("Max Self Damage", 6.0f, 0.0f..20.0f, 0.25f, page.atValue(Page.GENERAL))
+    var damageBalance by setting("Damage Balance", -2.5f, -10.0f..10.0f, 0.25f, page.atValue(Page.GENERAL))
+    var range by setting("Range", 5.4f, 0.0f..6.0f, 0.25f, page.atValue(Page.GENERAL))
 
-    private val updateDelay by setting("Update Delay", 50, 5..250, 1, page.atValue(Page.TIMING))
-    private val autoSetSpeed by setting("Auto", false, page.atValue(Page.TIMING))
-    private val timingMode by setting("Timing Mode", TimingMode.INSTANT, page.atValue(Page.TIMING) and  { !autoSetSpeed })
-    private val delay by setting(
+    var updateDelay by setting("Update Delay", 50, 5..250, 1, page.atValue(Page.TIMING))
+    var autoSetSpeed by setting("Auto", false, page.atValue(Page.TIMING))
+    var timingMode by setting("Timing Mode", TimingMode.INSTANT, page.atValue(Page.TIMING) and  { !autoSetSpeed })
+    var delay by setting(
         "Delay",
         75,
         0..1000,
@@ -145,7 +146,7 @@ internal object BedAura : Module(
         page.atValue(Page.TIMING) and { autoSetSpeed || timingMode != TimingMode.SWITCH }
     )
 
-    private val placeDelay by setting(
+    var placeDelay by setting(
         "Place Delay",
         25,
         0..1000,
@@ -153,7 +154,7 @@ internal object BedAura : Module(
         page.atValue(Page.TIMING) and { autoSetSpeed || timingMode == TimingMode.SWITCH }
     )
 
-    private val breakDelay by setting(
+    var breakDelay by setting(
         "Break Delay",
         50,
         0..1000,
@@ -257,7 +258,7 @@ internal object BedAura : Module(
         GENERAL, TIMING, FORCE_PLACE, MOTION_DETECT, RENDER
     }
 
-    private enum class TimingMode {
+    enum class TimingMode {
         INSTANT, SWITCH
     }
 
@@ -309,10 +310,8 @@ internal object BedAura : Module(
 
     init {
         onEnable {
-            if (autoEat && !AutoEat.isEnabled) AutoEat.enable()
         }
         onDisable {
-            if (autoEat && AutoEat.isEnabled) AutoEat.disable()
             reset()
         }
 

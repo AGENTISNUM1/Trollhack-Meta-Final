@@ -9,7 +9,6 @@ import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.event.safeListener
 import dev.luna5ama.trollhack.manager.managers.CombatManager
 import dev.luna5ama.trollhack.manager.managers.EntityManager
-import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager
 import dev.luna5ama.trollhack.manager.managers.InventoryTaskManager
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
@@ -53,7 +52,7 @@ import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.pow
 
-internal object AutoOffhand : Module(
+internal object Offhand : Module(
     name = "Offhand",
     description = "Manages item in your offhand",
     category = Category.COMBAT,
@@ -257,7 +256,7 @@ internal object AutoOffhand : Module(
 
             if (mainHandTotem && (typeAlt == typeOriginal) && typeAlt == Type.TOTEM) {
                 if (player.heldItemMainhand.item != Items.TOTEM_OF_UNDYING) {
-                    MainHandPause.withPause(AutoOffhand, damageTimeout) {
+                    MainHandPause.withPause(Offhand, damageTimeout) {
                         swapToItemOrMove(Items.TOTEM_OF_UNDYING)
                     }
                 } else {
@@ -319,7 +318,7 @@ internal object AutoOffhand : Module(
 
         if (checkDamage) {
             if (mob) maxDamage = max(getMobDamage(), maxDamage)
-            if (AutoOffhand.player) maxDamage = max(getPlayerDamage(), maxDamage)
+            if (Offhand.player) maxDamage = max(getPlayerDamage(), maxDamage)
             if (arrow) maxDamage = max(getArrowDamage(), maxDamage)
             if (crystal) maxDamage = max(getCrystalDamage(), maxDamage)
             if (falling && nextFallDist > 3.0f) maxDamage = max(ceil(nextFallDist - 3.0f), maxDamage)

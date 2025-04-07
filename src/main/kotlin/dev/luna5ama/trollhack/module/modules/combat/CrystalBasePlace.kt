@@ -174,10 +174,8 @@ internal object CrystalBasePlace : Module(
             .maxOfOrNull { it.value.targetDamage } ?: 0.0f
 
         for (pos in posList) {
-            // Neighbor blocks check
             if (!hasNeighbor(pos)) continue
 
-            // Collide check
             val crystalPos = pos.toVec3d(0.5, 1.0, 0.5)
             if (!contextSelf.checkColliding(crystalPos)) continue
             if (!contextTarget.checkColliding(crystalPos)) continue

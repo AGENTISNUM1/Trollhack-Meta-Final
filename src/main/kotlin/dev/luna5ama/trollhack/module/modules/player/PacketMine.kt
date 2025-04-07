@@ -17,7 +17,6 @@ import dev.luna5ama.trollhack.graphics.ESPRenderer
 import dev.luna5ama.trollhack.graphics.Easing
 import dev.luna5ama.trollhack.graphics.ProjectionUtils
 import dev.luna5ama.trollhack.graphics.color.ColorRGB
-import dev.luna5ama.trollhack.graphics.color.setGLColor
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.ghostSwitch
@@ -47,7 +46,6 @@ import dev.luna5ama.trollhack.util.world.canBreakBlock
 import dev.luna5ama.trollhack.util.world.getMiningSide
 import dev.luna5ama.trollhack.util.world.isAir
 import net.minecraft.block.state.IBlockState
-import net.minecraft.client.gui.FontRenderer
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.init.Blocks
 import net.minecraft.init.Enchantments
@@ -69,7 +67,7 @@ internal object PacketMine : Module(
     description = "Break block with packet",
     modulePriority = 200
 ) {
-    private val miningMode by setting("Mining Mode", MiningMode.NORMAL_RETRY)
+    var miningMode by setting("Mining Mode", MiningMode.NORMAL_RETRY)
     private val autoSwitch by setting("Auto Switch", true)
     private val ghostSwitchBypass by setting("Ghost Switch Bypass", HotbarSwitchManager.Override.SWAP)
     private val cancelOnSwitch by setting("Cancel On Switch", false)
@@ -90,8 +88,8 @@ internal object PacketMine : Module(
     private val miningTaskTimeout by setting("Mining Task Timeout", 3000, 0..10000, 50)
     private val range by setting("Range", 4.5f, 0.0f..10.0f, 0.1f)
     private val removeOutOfRange by setting("Remove Out Of Range", false)
-    private val useCustomColor by setting("Use Custom Color", false)
-    private val customColor by setting("Custom Color", ColorRGB(255, 255, 255), false, { useCustomColor })
+    var useCustomColor by setting("Use Custom Color", false)
+    var customColor by setting("Custom Color", ColorRGB(255, 255, 255), false, { useCustomColor })
     private val RenderModeSetting by setting("Render Mode", RenderMode.NORMAL)
     private val showPercentage by setting("Show Percentage", true)
     private val clickTimer = TickTimer()
@@ -119,7 +117,7 @@ internal object PacketMine : Module(
         }
     }
 
-    private enum class MiningMode(override val displayName: CharSequence, val continous: Boolean) : DisplayEnum {
+    public enum class MiningMode(override val displayName: CharSequence, val continous: Boolean) : DisplayEnum {
         NORMAL_ONCE(TranslateType.SPECIFIC key "Normal Once", false),
         NORMAL_RETRY(TranslateType.SPECIFIC key "Normal Retry", false),
         CONTINUOUS_NORMAL(TranslateType.SPECIFIC key "Continuous Normal", true),
@@ -152,39 +150,24 @@ internal object PacketMine : Module(
             miningInfo0?.let { miningInfo ->
                 if (showPercentage) {
                     val progress = ((System.currentTimeMillis() - miningInfo.startTime) / miningInfo.length.toFloat()).coerceIn(0f, 1f)
-                    val progressText = "${(progress * 100).toInt()}%"
-
-                    // Calculate color based on progress (green to red gradient)
-                    val color = when {
-                        progress < 0.5f -> ColorRGB(
-                            (255 * (progress * 2)).toInt(),
-                            255,
-                            0
-                        )
-                        else -> ColorRGB(
-                            255,
-                            (255 * ((1 - progress) * 2)).toInt(),
-                            0
-                        )
-                    }
+                    val progressText = "${(progress * 100).toInt()} %"
+                    val usernameText = mc.player.name // Replace with your actual username
 
                     val center = miningInfo.pos.toVec3dCenter()
                     val screenPos = ProjectionUtils.toAbsoluteScreenPos(center)
                     val distFactor = max(ProjectionUtils.distToCamera(center) - 1.0, 0.0)
-                    val scale = max(3.0f / 2.0.pow(distFactor).toFloat(), 1.0f)
-
-                    // Draw using Minecraft's font renderer
-                    val fr: FontRenderer = mc.fontRenderer
-                    val width = fr.getStringWidth(progressText) * scale
-                    val height = fr.FONT_HEIGHT * scale
-
-                    fr.drawString(
-                        progressText,
-                        (screenPos.x - width / 2).toFloat(),
-                        (screenPos.y - height / 2).toFloat(),
-                        color.rFloat.toInt(),
-                        false
-                    )
+                    val scale = max(6.0f / 2.0.pow(distFactor).toFloat(), 1.0f) * 1.5f // Increase scale for bigger text
+                    val progressWidth = MainFontRenderer.getWidth(progressText, scale)
+                    val progressHeight = MainFontRenderer.getHeight(scale)
+                    val progressX = screenPos.x.toFloat() - (progressWidth * 0.5f)
+                    val progressY = screenPos.y.toFloat() - (progressHeight * 0.5f)
+                    MainFontRenderer.drawString(progressText, progressX, progressY, scale = scale)
+                    val usernameScale = scale * 0.8f // Slightly smaller scale for username
+                    val usernameWidth = MainFontRenderer.getWidth(usernameText, usernameScale)
+                    val usernameHeight = MainFontRenderer.getHeight(usernameScale)
+                    val usernameX = screenPos.x.toFloat() - (usernameWidth * 0.5f)
+                    val usernameY = progressY + progressHeight // Position username below progress text
+                    MainFontRenderer.drawString(usernameText, usernameX, usernameY, scale = usernameScale)
                 }
             }
         }
@@ -244,6 +227,7 @@ internal object PacketMine : Module(
                     }
                 }
             }
+
 
             renderer.render(true)
         }
@@ -412,6 +396,7 @@ internal object PacketMine : Module(
             }
         }
 
+
         return false
     }
 
@@ -419,8 +404,10 @@ internal object PacketMine : Module(
         runSafe {
             val prev = miningQueue[module]
             if (prev == null || prev.pos != pos || prev.priority != priority) {
+
                 miningQueue[module] = MiningTask(module, pos, priority, once)
             }
+
 
             updateMining()
         }

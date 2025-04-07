@@ -10,7 +10,7 @@ import dev.luna5ama.trollhack.gui.rgui.WindowComponent
 import dev.luna5ama.trollhack.gui.rgui.component.Button
 import dev.luna5ama.trollhack.gui.rgui.component.SettingSlider
 import dev.luna5ama.trollhack.gui.rgui.component.Slider
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.setting.settings.impl.number.IntegerSetting
 import dev.luna5ama.trollhack.setting.settings.impl.other.ColorSetting
 import dev.luna5ama.trollhack.util.math.MathUtils
@@ -277,14 +277,14 @@ class ColorPicker(
             Vec2f(huePos.first.x - 5.0f, pointerPosY + 2.0f),
             Vec2f(huePos.first.x - 1.0f, pointerPosY),
             1.5f,
-            GuiSetting.primary
+            ClickGUI.primary
         )
         RenderUtils2D.drawTriangleOutline(
             Vec2f(huePos.second.x + 1.0f, pointerPosY),
             Vec2f(huePos.second.x + 5.0f, pointerPosY + 2.0f),
             Vec2f(huePos.second.x + 5.0f, pointerPosY - 2.0f),
             1.5f,
-            GuiSetting.primary
+            ClickGUI.primary
         )
     }
 

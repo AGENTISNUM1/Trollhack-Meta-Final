@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.player
+package dev.luna5ama.trollhack.module.modules.wizard
 
 import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.event.events.TickEvent
@@ -27,20 +27,26 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemTool
 import net.minecraft.util.EnumHand
 
-internal object AutoEat : Module(
-    name = "Auto Eat",
-    description = "Automatically eat when hungry",
-    category = Category.PLAYER
+internal object AutoEatPlus : Module(
+    name = "Auto Eat Plus",
+    description = "Automatically eat",
+    category = Category.WIZARD
 ) {
-    private val belowHunger by setting("Below Hunger", 15, 1..20, 1)
+    private val alwayseat by setting("Always Eat", false)
+    private val health by setting("Health", false, description = "Eat when ur health gets below a certain amount")
     private val belowHealth by setting("Below Health", 10, 1..36, 1)
     private val eatBadFood by setting("Eat Bad Food", false)
+    private val onlygapples by setting("Only Gapples", false, description = "Only eat enchanted golden apples")
     private val pauseBaritone by setting("Pause Baritone", true)
+    private val swap by setting("Swap", false, description = "swaps to the best food")
+    private val eatWhileTakingDamage by setting("Eat While Taking Damage", true,
+        description = "Force eat when taking damage")
 
     private var lastSlot = -1
     private var eating = false
+    private var currentFoodStack: ItemStack? = null
     private var lastTask: InventoryTask? = null
-
+    private var wasTakingDamage = false
 
     override fun isActive(): Boolean {
         return isEnabled && eating
@@ -60,52 +66,58 @@ internal object AutoEat : Module(
                 return@safeListener
             }
 
+            val isTakingDamage = player.hurtTime > 0
+            val shouldForceEat = eatWhileTakingDamage && isTakingDamage && !wasTakingDamage
+            wasTakingDamage = isTakingDamage
+
+            // If we're currently eating, check if we should continue
+            if (eating) {
+                val activeStack = player.getHeldItem(currentHand())
+
+                if (currentFoodStack == null
+                    || !ItemStack.areItemStacksEqual(activeStack, currentFoodStack) ||
+                    (currentFoodStack?.count ?: 0) > activeStack.count) {
+                    stopEating()
+                }
+                return@safeListener
+            }
+
             val hand = when {
-                !shouldEat() -> {
-                    null // Null = stop eating
+                !shouldEat() && !shouldForceEat -> null
+                isValid(player.heldItemOffhand) -> EnumHand.OFF_HAND
+                isValid(player.heldItemMainhand) -> EnumHand.MAIN_HAND
+                swap -> {
+                    if (swapToFood()) {
+                        startEating()
+                        return@safeListener
+                    } else {
+                        null
+                    }
                 }
-                isValid(player.heldItemOffhand) -> {
-                    EnumHand.OFF_HAND
-                }
-                isValid(player.heldItemMainhand) -> {
-                    EnumHand.MAIN_HAND
-                }
-                swapToFood() -> { // If we found valid food and moved
-                    // Set eating and pause then return and wait until next tick
-                    startEating()
-                    return@safeListener
-                }
-                else -> {
-                    null // If we can't find any valid food then stop eating
-                }
+                else -> null
             }
 
             if (hand != null) {
+                currentFoodStack = player.getHeldItem(hand).copy()
                 eat(hand)
             } else {
-                // Stop eating first and swap back in the next tick
-                if (eating) {
-                    stopEating()
-                } else {
-                    swapBack()
-                }
+                swapBack()
             }
         }
     }
 
-    private fun SafeClientEvent.shouldEat() =
-        player.foodStats.foodLevel < belowHunger
-            || player.scaledHealth < belowHealth
+    private fun currentHand(): EnumHand {
+        return if (mc.player.heldItemOffhand.item is ItemFood) EnumHand.OFF_HAND else EnumHand.MAIN_HAND
+    }
 
+    private fun SafeClientEvent.shouldEat() =
+        alwayseat || (health && player.scaledHealth < belowHealth)
 
     private fun SafeClientEvent.eat(hand: EnumHand) {
-        if (!eating || !player.isHandActive || player.activeHand != hand) {
+        if (!player.isHandActive || player.activeHand != hand) {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.keyCode, true)
-
-            // Vanilla Minecraft prioritize offhand so we need to force it using the specific hand
             playerController.processRightClick(player, world, hand)
         }
-
         startEating()
     }
 
@@ -116,12 +128,11 @@ internal object AutoEat : Module(
 
     private fun stopEating() {
         unpauseBaritone()
-
         runSafe {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.keyCode, false)
         }
-
         eating = false
+        currentFoodStack = null
     }
 
     private fun swapBack() {
@@ -134,9 +145,6 @@ internal object AutoEat : Module(
         }
     }
 
-    /**
-     * @return `true` if food found and moved
-     */
     private fun SafeClientEvent.swapToFood(): Boolean {
         lastSlot = player.inventory.currentItem
         val hasFoodInSlots = swapToItem<ItemFood> { isValid(it) }
@@ -149,9 +157,6 @@ internal object AutoEat : Module(
         }
     }
 
-    /**
-     * @return `true` if food found and moved
-     */
     private fun SafeClientEvent.moveFoodToHotbar(): Boolean {
         val slotFrom = player.storageSlots.firstItem<ItemFood, Slot> {
             isValid(it)
@@ -173,14 +178,17 @@ internal object AutoEat : Module(
         val item = itemStack.item
 
         return item is ItemFood
-            && item != Items.CHORUS_FRUIT
-            && (eatBadFood || !isBadFood(itemStack, item))
-            && player.canEat(item == Items.GOLDEN_APPLE)
+                && item != Items.CHORUS_FRUIT
+                && (eatBadFood || !isBadFood(itemStack, item))
+                && (!onlygapples || item == Items.GOLDEN_APPLE || item == Items.GOLDEN_CARROT)
+                && player.canEat(true)
     }
 
     private fun isBadFood(itemStack: ItemStack, item: ItemFood) =
         item == Items.ROTTEN_FLESH
-            || item == Items.SPIDER_EYE
-            || item == Items.POISONOUS_POTATO
-            || item == Items.FISH && (itemStack.metadata == 3 || itemStack.metadata == 2) // Puffer fish, Clown fish
+                || item == Items.SPIDER_EYE
+                || item == Items.POISONOUS_POTATO
+                || item == Items.FISH && (itemStack.metadata == 3 || itemStack.metadata == 2)
+
+
 }

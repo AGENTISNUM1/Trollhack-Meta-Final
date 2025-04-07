@@ -13,7 +13,6 @@ import dev.luna5ama.trollhack.util.inventory.operation.moveTo
 import dev.luna5ama.trollhack.util.inventory.slot.hotbarSlots
 import dev.luna5ama.trollhack.util.inventory.slot.inventorySlots
 import dev.luna5ama.trollhack.util.inventory.slot.offhandSlot
-import dev.luna5ama.trollhack.module.modules.combat.AutoOffhand
 import dev.luna5ama.trollhack.util.text.NoSpamMessage
 import dev.luna5ama.trollhack.util.threads.onMainThread
 import net.minecraft.init.Items
@@ -42,9 +41,9 @@ internal object  AutoTotem : Module(
 
     init {
         onEnable {
-            if (AutoOffhand.isEnabled) {
+            if (Offhand.isEnabled) {
                 NoSpamMessage.sendMessage("$chatName Offhand disabled")
-                AutoOffhand.disable()
+                Offhand.disable()
             }
         }
         onDisable {

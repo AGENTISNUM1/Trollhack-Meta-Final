@@ -13,7 +13,7 @@ import dev.luna5ama.trollhack.gui.IGuiScreen.Companion.forEachWindow
 import dev.luna5ama.trollhack.gui.rgui.MouseState
 import dev.luna5ama.trollhack.gui.rgui.WindowComponent
 import dev.luna5ama.trollhack.gui.rgui.windows.ListWindow
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.Wrapper
 import dev.luna5ama.trollhack.util.accessor.listShaders
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
@@ -87,14 +87,14 @@ abstract class AbstractTrollGui : GuiScreen(), IListenerOwner by ListenerOwner()
     private var displayed = TimedFlag(false)
     private val fadeMultiplier
         get() = if (displayed.value) {
-            if (GuiSetting.fadeInTime > 0.0f) {
-                Easing.OUT_CUBIC.inc(Easing.toDelta(displayed.lastUpdateTime, GuiSetting.fadeInTime * 1000.0f))
+            if (ClickGUI.fadeInTime > 0.0f) {
+                Easing.OUT_CUBIC.inc(Easing.toDelta(displayed.lastUpdateTime, ClickGUI.fadeInTime * 1000.0f))
             } else {
                 1.0f
             }
         } else {
-            if (GuiSetting.fadeOutTime > 0.0f) {
-                Easing.OUT_CUBIC.dec(Easing.toDelta(displayed.lastUpdateTime, GuiSetting.fadeOutTime * 1000.0f))
+            if (ClickGUI.fadeOutTime > 0.0f) {
+                Easing.OUT_CUBIC.dec(Easing.toDelta(displayed.lastUpdateTime, ClickGUI.fadeOutTime * 1000.0f))
             } else {
                 0.0f
             }
@@ -105,7 +105,7 @@ abstract class AbstractTrollGui : GuiScreen(), IListenerOwner by ListenerOwner()
 
         safeParallelListener<TickEvent.Pre> {
             blurShader.shader?.let {
-                val multiplier = GuiSetting.backGroundBlur * fadeMultiplier
+                val multiplier = ClickGUI.backGroundBlur * fadeMultiplier
                 for (shader in it.listShaders) {
                     shader.shaderManager.getShaderUniform("multiplier")?.set(multiplier)
                 }
@@ -291,7 +291,7 @@ abstract class AbstractTrollGui : GuiScreen(), IListenerOwner by ListenerOwner()
         GlStateManager.colorMask(true, true, true, true)
 
         // Blur effect
-        if (GuiSetting.backGroundBlur > 0.0f) {
+        if (ClickGUI.backGroundBlur > 0.0f) {
             GlStateManager.pushMatrix()
             glUseProgram(0)
             blurShader.shader?.render(partialTicks)
@@ -302,12 +302,12 @@ abstract class AbstractTrollGui : GuiScreen(), IListenerOwner by ListenerOwner()
         }
 
         // Darkened background
-        if (GuiSetting.darkness > 0.0f) {
-            val color = ColorRGB(0, 0, 0, (GuiSetting.darkness * 255.0f * fadeMultiplier).toInt())
+        if (ClickGUI.darkness > 0.0f) {
+            val color = ColorRGB(0, 0, 0, (ClickGUI.darkness * 255.0f * fadeMultiplier).toInt())
             RenderUtils2D.drawRectFilled(Resolution.widthF, Resolution.heightF, color)
         }
 
-        if (GuiSetting.particle) {
+        if (ClickGUI.particle) {
             GlStateUtils.blend(true)
             ParticleShader.render()
         }
@@ -341,7 +341,7 @@ abstract class AbstractTrollGui : GuiScreen(), IListenerOwner by ListenerOwner()
         if (searchString.isNotBlank() && System.currentTimeMillis() - renderStringPosX.time <= 5000L) {
             val posX = Resolution.trollWidthF / 2.0f - renderStringPosX.get() / 2.0f
             val posY = Resolution.trollHeightF / 2.0f - MainFontRenderer.getHeight(2.0f) / 2.0f
-            var color = GuiSetting.text
+            var color = ClickGUI.text
             color =
                 color.alpha(Easing.IN_CUBIC.dec(Easing.toDelta(renderStringPosX.time, 5000.0f), 0.0f, 255.0f).toInt())
             MainFontRenderer.drawString(searchString, posX, posY, color, 2.0f)
@@ -363,7 +363,7 @@ abstract class AbstractTrollGui : GuiScreen(), IListenerOwner by ListenerOwner()
         }
 
         fun calcMousePos(x: Int, y: Int): Vec2f {
-            val scaleFactor = GuiSetting.scaleFactor
+            val scaleFactor = ClickGUI.scaleFactor
             return Vec2f(
                 x / scaleFactor - 1.0f,
                 (Wrapper.minecraft.displayHeight - 1 - y) / scaleFactor

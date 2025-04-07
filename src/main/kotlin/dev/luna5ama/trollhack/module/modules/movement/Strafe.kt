@@ -24,7 +24,7 @@ internal object Strafe : Module(
     description = "Improves control",
     modulePriority = 50
 ) {
-    private val timerBoost by setting("Timer Boost", 1.09f, 1.0f..1.5f, 0.01f)
+    var timerBoost by setting("Timer Boost", 1.09f, 1.0f..1.5f, 0.01f)
     private val groundBoost by setting("Ground Boost", false)
     private val airBoost by setting("Air Boost", true)
     private val speedPotionBoost by setting("Speed Potion Boost", true)

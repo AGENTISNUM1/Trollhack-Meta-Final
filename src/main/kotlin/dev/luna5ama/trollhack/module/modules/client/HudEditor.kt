@@ -13,6 +13,7 @@ internal object HudEditor : Module(
     category = Category.CLIENT,
     visible = false
 ) {
+    val enablehud by setting("Enable Hud", true)
     init {
         onEnable {
             onMainThreadSafe {

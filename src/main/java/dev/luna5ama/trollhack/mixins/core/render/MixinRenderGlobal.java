@@ -2,7 +2,6 @@ package dev.luna5ama.trollhack.mixins.core.render;
 
 import dev.luna5ama.trollhack.event.events.render.RenderEntityEvent;
 import dev.luna5ama.trollhack.module.modules.player.Freecam;
-import dev.luna5ama.trollhack.module.modules.render.ESP;
 import dev.luna5ama.trollhack.module.modules.render.FastRender;
 import dev.luna5ama.trollhack.module.modules.render.SelectionHighlight;
 import net.minecraft.block.state.IBlockState;
@@ -142,10 +141,6 @@ public abstract class MixinRenderGlobal {
 
     @Inject(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderHelper;enableStandardItemLighting()V", ordinal = 0, shift = At.Shift.BEFORE))
     private void Inject$renderEntities$INVOKE$ShaderGroup$render$BEFORE(Entity renderViewEntity, ICamera camera, float partialTicks, CallbackInfo ci) {
-        if (ESP.INSTANCE.getOutlineESP()) {
-            prevShaderGroup = this.entityOutlineShader;
-            this.entityOutlineShader = ESP.NoOpShaderGroup.INSTANCE;
-        }
     }
 
     @Inject(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;enableColorMaterial()V", shift = At.Shift.AFTER))
@@ -159,8 +154,7 @@ public abstract class MixinRenderGlobal {
 
     @Inject(method = "renderEntityOutlineFramebuffer", at = @At("HEAD"), cancellable = true)
     private void Inject$renderEntityOutlineFramebuffer(CallbackInfo ci) {
-        if (ESP.INSTANCE.getOutlineESP()) {
             ci.cancel();
         }
     }
-}
+

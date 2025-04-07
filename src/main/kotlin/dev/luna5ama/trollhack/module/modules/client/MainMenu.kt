@@ -35,7 +35,7 @@ internal object MainMenu : AbstractModule(
     name = "Main Menu",
     description = "Better Main Menu",
     category = Category.CLIENT,
-    visible = false, // Changed to true to make it toggleable
+    visible = false,
     config = GenericConfig
 ) {
     private val title by setting("Title", Title.TROLL_HACK)
@@ -333,7 +333,7 @@ internal object MainMenu : AbstractModule(
     private object TitleFontRender : FontRenderer(
         Font.createFont(
             Font.TRUETYPE_FONT,
-            this::class.java.getResourceAsStream("/assets/trollhack/fonts/Jura-Light.ttf")
+            this::class.java.getResourceAsStream("/assets/trollhack/fonts/Orbitron.ttf")
         ), 128.0f, 4096
     ) {
         override val charGap: Float

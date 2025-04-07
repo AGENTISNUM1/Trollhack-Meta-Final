@@ -2,7 +2,7 @@ package dev.luna5ama.trollhack.gui.hudgui.elements.misc
 
 import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.gui.hudgui.LabelHud
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.TpsCalculator
 import dev.fastmc.common.collection.CircularArray
 import dev.fastmc.common.collection.CircularArray.Companion.average
@@ -19,8 +19,8 @@ internal object TPS : LabelHud(
     override fun SafeClientEvent.updateText() {
         tpsBuffer.add(TpsCalculator.tickRate)
 
-        displayText.add("%.2f".format(tpsBuffer.average()), GuiSetting.text)
-        displayText.add("tps", GuiSetting.primary)
+        displayText.add("%.2f".format(tpsBuffer.average()), ClickGUI.text)
+        displayText.add("tps", ClickGUI.primary)
     }
 
 }

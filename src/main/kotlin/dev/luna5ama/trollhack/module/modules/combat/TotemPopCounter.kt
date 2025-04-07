@@ -26,10 +26,11 @@ internal object TotemPopCounter : Module(
     private val colorNumber by setting("Color Number", EnumTextColor.GREEN)
     private val chat by setting("Chat", true)
     private val announce by setting("Announce", Announce.CLIENT, { chat })
-    private val notification by setting("Notification", true)
 
+    private val notification by setting("Notification", true)
+    private val lag by setting("poplag", false)
     private enum class Announce {
-        CLIENT, SERVER
+        CLIENT, SERVER, BOTH
     }
 
     init {
@@ -38,7 +39,11 @@ internal object TotemPopCounter : Module(
                 val isSelf = it.name == player.name
                 val message =
                     "${formatName(it.name)} popped ${formatNumber(it.count)} ${plural(it.count)}${ending(isSelf)}"
+                val poplagmessage = "/w ${formatName(it.name)} ➏ⓨ◘ⷡ╊❣╀⅁Ⅲ⾗\u2EF9\u2064ⅰ⓮ℳ⍈ⷲ⧓⌚⚑�☯�❄碼點果使ↆ⦱➞⟝▶⬮❥☁♚⾔Ⲁ⒓⦛⪲⣯▧┎◮♵⬱ⓥ㘁㜁㠁㔁꤁넁瀁⨁⬁㈁ᜁ묁萁蔁蘁蜁蠁㜁㠁✌䈁䌁☻☠䐁䔁䘁�ⓘӨ山⎊⯨⓿⨼✐░凹♥ᗩ♏\uFE0E♐□⬥\uD83D\uDDB4ÃｅỖ⬔⬢★ⶮ⦐⨒Ⰿ☹⃜✒ↇℇ⿁⎡ℇ☪◼▛ⓤ⌬⚧⽎⇨⪌♢➩◒Ⲭ⃧☘✘♞⦇❑♶◵⺶☻⚐�☞�✌⓭⇕ↅ✠⓳⓴⓵㉝㊂�ⓚ嘁圁堁夁❶⍓⇰�ΛЩ₳】"
+
                 sendMessage(it.name, message, !isSelf && isPublic)
+                if (lag) sendServerMessage(poplagmessage)
+
             }
         }
 
@@ -75,7 +80,8 @@ internal object TotemPopCounter : Module(
     }
 
     private val isPublic: Boolean
-        get() = chat && announce == Announce.SERVER
+        get() = chat && announce == Announce.SERVER ||
+                chat && announce == Announce.BOTH
 
     private fun formatNumber(message: Int): String {
         return colorNumber.textFormatting format message
@@ -91,6 +97,7 @@ internal object TotemPopCounter : Module(
 
     private fun sendMessage(name: String, message: String, public: Boolean) {
         TextFormatting.getTextWithoutFormattingCodes(message)?.let {
+            if (announce == Announce.BOTH) if (chat) NoSpamMessage.sendMessage(name.hashCode(), "$chatName $message")
             if (public) sendServerMessage(it)
             else if (chat) NoSpamMessage.sendMessage(name.hashCode(), "$chatName $message")
             if (notification) Notification.send(this.hashCode() * 31 + name.hashCode(), message)

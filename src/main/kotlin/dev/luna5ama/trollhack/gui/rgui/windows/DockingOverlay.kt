@@ -7,7 +7,7 @@ import dev.luna5ama.trollhack.graphics.Resolution
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.IGuiScreen
 import dev.luna5ama.trollhack.gui.rgui.WindowComponent
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.setting.GuiConfig
 import dev.luna5ama.trollhack.util.delegate.FrameFloat
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
@@ -85,7 +85,7 @@ class DockingOverlay(screen: IGuiScreen, private val parent: WindowComponent) : 
     override fun onPostRender(absolutePos: Vec2f) {
         val fifthWidth = width / 5.0f
         val fifthHeight = height / 5.0f
-        val rectColor = GuiSetting.backGround.alpha((GuiSetting.backGround.a * renderAlphaMul).toInt())
+        val rectColor = ClickGUI.backGround.alpha((ClickGUI.backGround.a * renderAlphaMul).toInt())
 
         fun drawRect(x: Int, y: Int) {
             RenderUtils2D.drawRectFilled(
@@ -109,7 +109,7 @@ class DockingOverlay(screen: IGuiScreen, private val parent: WindowComponent) : 
         drawRect(2, 4)
         drawRect(4, 4)
 
-        val textColor = GuiSetting.text.alpha((GuiSetting.text.a * renderAlphaMul).toInt())
+        val textColor = ClickGUI.text.alpha((ClickGUI.text.a * renderAlphaMul).toInt())
 
         fun drawText(x: Int, y: Int, text: String) {
             val scale = 1.5f

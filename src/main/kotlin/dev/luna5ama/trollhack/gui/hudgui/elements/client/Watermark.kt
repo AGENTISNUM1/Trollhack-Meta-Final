@@ -6,7 +6,7 @@ import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.event.events.TickEvent
 import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.gui.hudgui.LabelHud
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import org.lwjgl.opengl.Display
 import java.lang.reflect.Field
 import java.lang.reflect.Method
@@ -59,8 +59,8 @@ internal object Watermark : LabelHud(
     }
 
     override fun SafeClientEvent.updateText() {
-        displayText.add(TrollHackMod.NAME, GuiSetting.primary)
+        displayText.add(TrollHackMod.NAME, ClickGUI.primary)
         displayText.add(" - Wizard edition")
-        displayText.add(TrollHackMod.VERSION, GuiSetting.text)
+        displayText.add(TrollHackMod.VERSION, ClickGUI.text)
     }
 }

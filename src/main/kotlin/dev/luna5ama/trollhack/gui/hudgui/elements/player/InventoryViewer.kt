@@ -3,7 +3,7 @@ package dev.luna5ama.trollhack.gui.hudgui.elements.player
 import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.graphics.RenderUtils2D
 import dev.luna5ama.trollhack.gui.hudgui.HudElement
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.inventory.slot.storageSlots
 import dev.luna5ama.trollhack.util.threads.runSafe
 
@@ -28,10 +28,10 @@ internal object InventoryViewer : HudElement(
 
     private fun drawFrame() {
         if (background) {
-            RenderUtils2D.drawRectFilled(0.0f, 0.0f, 162.0f, 54.0f, color = GuiSetting.backGround)
+            RenderUtils2D.drawRectFilled(0.0f, 0.0f, 162.0f, 54.0f, color = ClickGUI.backGround)
         }
         if (border) {
-            RenderUtils2D.drawRectOutline(0.0f, 0.0f, 162.0f, 54.0f, lineWidth = 2.0f, color = GuiSetting.primary)
+            RenderUtils2D.drawRectOutline(0.0f, 0.0f, 162.0f, 54.0f, lineWidth = 2.0f, color = ClickGUI.primary)
         }
     }
 

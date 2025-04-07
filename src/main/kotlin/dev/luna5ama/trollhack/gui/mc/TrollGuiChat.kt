@@ -7,7 +7,7 @@ import dev.luna5ama.trollhack.command.args.GreedyStringArg
 import dev.luna5ama.trollhack.graphics.RenderUtils2D
 import dev.luna5ama.trollhack.graphics.color.ColorRGB
 import dev.luna5ama.trollhack.graphics.shaders.WindowBlurShader
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.accessor.historyBuffer
 import dev.luna5ama.trollhack.util.accessor.sentHistoryCursor
 import dev.luna5ama.trollhack.util.threads.ConcurrentScope
@@ -203,7 +203,7 @@ class TrollGuiChat(
             inputField.x - 2.0f + inputField.width,
             inputField.y - 2.0f + inputField.height,
             1.0f,
-            GuiSetting.primary
+            ClickGUI.primary
         )
     }
 

@@ -23,7 +23,7 @@ import dev.luna5ama.trollhack.manager.managers.EntityManager
 import dev.luna5ama.trollhack.manager.managers.FriendManager
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.player.AutoEat
+import dev.luna5ama.trollhack.module.modules.wizard.AutoEatPlus
 import dev.luna5ama.trollhack.process.PauseProcess
 import dev.luna5ama.trollhack.process.PauseProcess.pauseBaritone
 import dev.luna5ama.trollhack.process.PauseProcess.unpauseBaritone
@@ -79,23 +79,23 @@ internal object CombatSetting : Module(
     private val wallRange by setting("Wall Range", 3.0f, 0.0f..6.0f, 0.1f, page.atValue(Page.TARGET_TYPE))
 
     /* Target Priority */
-    private val distancePriority by setting(
+    val distancePriority by setting(
         "Distance Priority",
         0.5f,
         0.0f..1.0f,
         0.01f,
         page.atValue(Page.TARGET_PRIORITY)
     )
-    private val healthPriority by setting(
+    var healthPriority by setting(
         "Health Priority",
         0.5f,
         0.0f..1.0f,
         0.01f,
         page.atValue(Page.TARGET_PRIORITY)
     )
-    private val armorPriority by setting("Armor Priority", 0.5f, 0.0f..1.0f, 0.01f, page.atValue(Page.TARGET_PRIORITY))
-    private val holePriority by setting("Hole Priority", 0.5f, 0.0f..1.0f, 0.01f, page.atValue(Page.TARGET_PRIORITY))
-    private val crosshairPriority by setting(
+    val armorPriority by setting("Armor Priority", 0.5f, 0.0f..1.0f, 0.01f, page.atValue(Page.TARGET_PRIORITY))
+    val holePriority by setting("Hole Priority", 0.5f, 0.0f..1.0f, 0.01f, page.atValue(Page.TARGET_PRIORITY))
+    var crosshairPriority by setting(
         "Crosshair Priority",
         0.5f,
         0.0f..1.0f,
@@ -164,10 +164,10 @@ internal object CombatSetting : Module(
         page.atValue(Page.HOLE_DETECTION) and { !ignoreNonFullBoxFilling })
 
     /* Render */
-    private val renderPrediction =
+    val renderPrediction =
         setting("Render Prediction", true, page.atValue(Page.RENDER) and motionPredict.atTrue())
-    private val chams0 = setting("Chams", true, page.atValue(Page.RENDER))
-    val chams by chams0
+    var chams0 = setting("Chams", true, page.atValue(Page.RENDER))
+    var chams by chams0
     private val chamsColor by setting(
         "Chams Color",
         ColorRGB(255, 32, 255, 127),
@@ -200,7 +200,7 @@ internal object CombatSetting : Module(
 
     private fun SafeClientEvent.checkEating() =
         pauseForEating.value
-            && (PauseProcess.isPausing(AutoEat) || player.isHandActive && player.activeItemStack.item is ItemFood)
+            && (PauseProcess.isPausing(AutoEatPlus) || player.isHandActive && player.activeItemStack.item is ItemFood)
             && (!ignoreOffhandEating.value || player.activeHand != EnumHand.OFF_HAND)
 
     override fun isActive() = KillAura.isActive() || BedAura.isActive() || TrollAura.isActive() || Surround.isActive()

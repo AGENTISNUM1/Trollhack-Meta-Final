@@ -2,9 +2,17 @@ package dev.luna5ama.trollhack.module
 
 import dev.luna5ama.trollhack.event.ListenerOwner
 import dev.luna5ama.trollhack.event.events.ModuleToggleEvent
+import dev.luna5ama.trollhack.graphics.color.ColorRGB
 import dev.luna5ama.trollhack.setting.configs.NameableConfig
 import dev.luna5ama.trollhack.setting.settings.AbstractSetting
+import dev.luna5ama.trollhack.setting.settings.IMutableSetting
+import dev.luna5ama.trollhack.setting.settings.ImmutableSetting
 import dev.luna5ama.trollhack.setting.settings.SettingRegister
+import dev.luna5ama.trollhack.setting.settings.impl.collection.CollectionSetting
+import dev.luna5ama.trollhack.setting.settings.impl.collection.MapSetting
+import dev.luna5ama.trollhack.setting.settings.impl.number.DoubleSetting
+import dev.luna5ama.trollhack.setting.settings.impl.number.FloatSetting
+import dev.luna5ama.trollhack.setting.settings.impl.number.IntegerSetting
 import dev.luna5ama.trollhack.setting.settings.impl.other.BindSetting
 import dev.luna5ama.trollhack.setting.settings.impl.primitive.BooleanSetting
 import dev.luna5ama.trollhack.setting.settings.impl.primitive.EnumSetting
@@ -72,7 +80,7 @@ open class AbstractModule(
 
     val settingGroup get() = config.getGroupOrPut(this.internalName)
     val fullSettingList get() = config.getSettings(this)
-    val settingList: List<AbstractSetting<*>> get() = fullSettingList.filter { it != bind && it != enabled && it != enabled && it != visible && it != default }
+    val settingList: List<AbstractSetting<*>> get() = fullSettingList.filter { it != bind && it != enabled && it != visible && it != default }
 
     val isEnabled: Boolean get() = enabled.value || alwaysEnabled
     val isDisabled: Boolean get() = !isEnabled
@@ -113,6 +121,163 @@ open class AbstractModule(
     open fun getHudInfo(): String {
         return ""
     }
+
+    /* SETTING MANIPULATION FUNCTIONS */
+
+    /**
+     * Gets the raw setting object by name
+     */
+    fun getRawSetting(settingName: String): AbstractSetting<*>? {
+        return fullSettingList.firstOrNull { it.name.equals(settingName) }
+    }
+
+    /**
+     * Universal setting modifier that handles all setting types
+     */
+    fun setSettingValue(settingName: String, value: Any): Boolean {
+        val setting = getRawSetting(settingName) ?: return false
+
+        return when {
+            // Handle BindSetting specially since it's immutable
+            setting is BindSetting && value is Bind -> {
+                setting.setValue(value.toString())
+                true
+            }
+
+            // Handle mutable settings
+            setting is IMutableSetting<*> -> {
+                try {
+                    when (value) {
+                        is Number -> handleNumberSetting(setting, value)
+                        else -> {
+                            if (setting.valueClass.isInstance(value)) {
+                                (setting as IMutableSetting<Any>).value = value
+                                true
+                            } else {
+                                setting.setValue(value.toString())
+                                true
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    false
+                }
+            }
+
+            // Handle other immutable settings
+            else -> try {
+                setting.setValue(value.toString())
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+
+    private fun handleNumberSetting(setting: AbstractSetting<*>, value: Number): Boolean {
+        return when (setting) {
+            is IntegerSetting -> { setting.value = value.toInt(); true }
+            is FloatSetting -> { setting.value = value.toFloat(); true }
+            is DoubleSetting -> { setting.value = value.toDouble(); true }
+            else -> false
+        }
+    }
+
+    /**
+     * Type-safe version for known setting types
+     */
+    inline fun <reified T : Any> setSettingValueTyped(settingName: String, value: T): Boolean {
+        val setting = getRawSetting(settingName) ?: return false
+
+        return when {
+            // Handle boolean settings
+            T::class == Boolean::class && setting is BooleanSetting -> {
+                setting.value = value as Boolean
+                true
+            }
+
+            // Handle number settings
+            T::class == Int::class && setting is IntegerSetting -> {
+                setting.value = value as Int
+                true
+            }
+            T::class == Float::class && setting is FloatSetting -> {
+                setting.value = value as Float
+                true
+            }
+            T::class == Double::class && setting is DoubleSetting -> {
+                setting.value = value as Double
+                true
+            }
+
+            // Handle special types
+            T::class == Bind::class && setting is BindSetting -> {
+                setting.setValue((value as Bind).toString())
+                true
+            }
+            T::class == ColorRGB::class && setting.valueClass == ColorRGB::class -> {
+                (setting as IMutableSetting<ColorRGB>).value = value as ColorRGB
+                true
+            }
+
+            // Handle collections
+            setting is CollectionSetting<*, *> && value is Collection<*> -> {
+                try {
+                    (setting as CollectionSetting<Any, *>).editValue {
+                        it.clear()
+                        it.addAll(value as Collection<Any>)
+                    }
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+
+            // Handle maps
+            setting is MapSetting<*, *, *> && value is Map<*, *> -> {
+                try {
+                    (setting as MapSetting<Any, Any, *>).value.clear()
+                    (setting as MapSetting<Any, Any, *>).value.putAll(value as Map<Nothing, Nothing>)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+
+            // Fallback to universal setter
+            else -> setSettingValue(settingName, value)
+        }
+    }
+
+    /**
+     * Gets the current value of a setting
+     */
+    fun <T : Any> getSettingValue(settingName: String): T? {
+        return getRawSetting(settingName)?.value as? T
+    }
+
+
+    // For color settings
+    fun setColorSetting(settingName: String, r: Int, g: Int, b: Int): Boolean {
+        return setSettingValue(settingName, ColorRGB(r, g, b))
+    }
+
+    // For enum settings
+    inline fun <reified T : Enum<T>> setEnumSetting(settingName: String, enumValue: T): Boolean {
+        return setSettingValueTyped(settingName, enumValue)
+    }
+
+    // For collection settings
+    fun <E> addToCollectionSetting(settingName: String, element: E): Boolean {
+        val setting = getRawSetting(settingName) as? CollectionSetting<E, *> ?: return false
+        return try {
+            setting.add(element)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    /* EVENT HANDLERS */
 
     protected fun onEnable(block: () -> Unit) {
         enabled.valueListeners.add { _, input ->

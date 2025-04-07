@@ -76,7 +76,6 @@ object RotationUtils {
     fun SafeClientEvent.getRotationTo(posTo: Vec3d): Vec2f {
         return getRotationTo(player.getPositionEyes(1f), posTo)
     }
-
     fun SafeClientEvent.getYawTo(posTo: Vec3d): Float {
         val vec = posTo.subtract(player.eyePosition)
         return normalizeAngle((atan2(vec.z, vec.x).toDegree() - 90.0).toFloat())
@@ -147,6 +146,8 @@ object RotationUtils {
     fun EntityPlayerSP.legitPitch(pitch: Float): Float {
         return (this.rotationPitch + normalizeAngle(pitch - this.rotationPitch)).coerceIn(-90.0f, 90.0f)
     }
+
+
 
     val EnumFacing.yaw: Float
         get() = when (this) {

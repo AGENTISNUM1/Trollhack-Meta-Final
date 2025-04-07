@@ -22,27 +22,24 @@ internal object FastUse : Module(
     category = Category.PLAYER,
     description = "Use items faster"
 ) {
-    val multiUse by setting("Multi Use", 1, 1..10, 1)
-    val delay by setting("Delay", 0, 0..10, 1)
+    var multiUse by setting("Multi Use", 1, 1..10, 1)
+    var delay by setting("Delay", 0, 0..10, 1)
     private val blocks = setting("Blocks", false)
-    private val allItems = setting("All Items", false)
-    private val expBottles = setting("Exp Bottles", true, allItems.atFalse())
-    private val endCrystals = setting("End Crystals", true, allItems.atFalse())
-    private val fireworks = setting("Fireworks", false, allItems.atFalse())
-    private val bow = setting("Bow", true, allItems.atFalse())
-    private val chargeSetting = setting("Bow Charge", 3, 0..20, 1, allItems.atTrue() or bow.atTrue())
-    private val chargeVariation = setting("Charge Variation", 5, 0..20, 1, allItems.atTrue() or bow.atTrue())
+    var allItems = true
+    private val bow = setting("Bow", true)
+    private val chargeSetting = setting("Bow Charge", 3, 0..20, 1, {allItems})
+    private val chargeVariation = setting("Charge Variation", 5, 0..20, 1, {allItems})
 
     private var lastUsedHand = EnumHand.MAIN_HAND
     private var randomVariation = 0
 
-    val bowCharge get() = if (isEnabled && (allItems.value || bow.value)) 72000.0 - (chargeSetting.value.toDouble() + chargeVariation.value / 2.0) else null
+    val bowCharge get() = if (isEnabled && (allItems || bow.value)) 72000.0 - (chargeSetting.value.toDouble() + chargeVariation.value / 2.0) else null
 
     init {
         safeListener<TickEvent.Post> {
             if (player.isSpectator) return@safeListener
 
-            if ((allItems.value || bow.value) && player.isHandActive && (player.activeItemStack.item == Items.BOW) && player.itemInUseMaxCount >= getBowCharge()) {
+            if ((allItems || bow.value) && player.isHandActive && (player.activeItemStack.item == Items.BOW) && player.itemInUseMaxCount >= getBowCharge()) {
                 randomVariation = 0
                 playerController.onStoppedUsingItem(player)
             }
@@ -66,13 +63,7 @@ internal object FastUse : Module(
         if (isEnabled) {
             runSafe {
                 val item = player.getHeldItem(lastUsedHand).item
-                if (item !is ItemAir
-                    && (allItems.value && item !is ItemBlock
-                        || blocks.value && item is ItemBlock
-                        || expBottles.value && item is ItemExpBottle
-                        || endCrystals.value && item is ItemEndCrystal
-                        || fireworks.value && item is ItemFirework)
-                ) {
+                if (item !is ItemAir && allItems && item !is ItemBlock) {
                     mc.rightClickDelayTimer = delay
                 }
             }

@@ -5,7 +5,7 @@ import dev.fastmc.common.TimeUnit
 import dev.luna5ama.trollhack.command.ClientCommand
 import dev.luna5ama.trollhack.command.execute.IExecuteEvent
 import dev.luna5ama.trollhack.event.SafeExecuteEvent
-import dev.luna5ama.trollhack.module.modules.client.Configurations
+import dev.luna5ama.trollhack.module.modules.client.ClientSettings
 import dev.luna5ama.trollhack.util.ConfigUtils
 import dev.luna5ama.trollhack.util.text.NoSpamMessage
 import dev.luna5ama.trollhack.util.text.formatValue
@@ -44,7 +44,7 @@ object ConfigCommand : ClientCommand(
             }
         }
 
-        enum<Configurations.ConfigType>("config type") { configTypeArg ->
+        enum<ClientSettings.ConfigType>("config type") { configTypeArg ->
             literal("reload") {
                 execute("Reload a config") {
                     configTypeArg.value.reload()

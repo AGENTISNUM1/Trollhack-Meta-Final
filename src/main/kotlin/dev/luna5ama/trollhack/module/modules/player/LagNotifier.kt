@@ -13,7 +13,7 @@ import dev.luna5ama.trollhack.graphics.color.ColorRGB
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.process.PauseProcess.pauseBaritone
 import dev.luna5ama.trollhack.process.PauseProcess.unpauseBaritone
 import dev.luna5ama.trollhack.util.WebUtils
@@ -57,7 +57,7 @@ internal object LagNotifier : Module(
             if (text.isBlank()) return@listener
 
             val posX = Resolution.trollWidthF / 2.0f - MainFontRenderer.getWidth(text) / 2.0f
-            val posY = 80.0f / GuiSetting.scaleFactor
+            val posY = 80.0f / ClickGUI.scaleFactor
 
             /* 80px down from the top edge of the screen */
             MainFontRenderer.drawString(text, posX, posY, color = ColorRGB(255, 33, 33))

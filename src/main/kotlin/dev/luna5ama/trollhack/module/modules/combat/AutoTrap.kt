@@ -2,13 +2,17 @@ package dev.luna5ama.trollhack.module.modules.combat
 
 import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.event.events.TickEvent
+import dev.luna5ama.trollhack.event.events.render.Render3DEvent
 import dev.luna5ama.trollhack.event.safeListener
+import dev.luna5ama.trollhack.graphics.ESPRenderer
+import dev.luna5ama.trollhack.graphics.color.ColorRGB
 import dev.luna5ama.trollhack.manager.managers.CombatManager
 import dev.luna5ama.trollhack.manager.managers.EntityManager
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.ghostSwitch
 import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager.sendPlayerPacket
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
+import dev.luna5ama.trollhack.module.modules.combat.AutoTrap.renderColor
 import dev.luna5ama.trollhack.module.modules.exploit.Bypass
 import dev.luna5ama.trollhack.util.Bind
 import dev.luna5ama.trollhack.util.EntityUtils.flooredPosition
@@ -48,7 +52,19 @@ internal object AutoTrap : Module(
     })
     private val autoDisable by setting("Auto Disable", true)
     private val strictDirection by setting("Strict Direction", false)
-    private val placeSpeed by setting("Places Per Tick", 4f, 0.25f..5f, 0.25f)
+    private val antistep by setting("AntiStep", true)
+    private val placeSpeed by setting("Places Per Tick", 4f, 1f..12f, 1f)
+    private val delay by setting("Delay", 50.0f, 10.0f..100.0f, 5f)
+    private val render by setting("Render", true)
+    private val renderColor by setting("Render Color", ColorRGB(255, 0, 0), false, { render })
+    private val renderFade by setting("Render Fade", true, { render })
+    private val renderTime by setting("Render Time", 2000, 500..5000, 100, { render })
+
+    private val renderer = ESPRenderer().apply {
+        aFilled = 31
+        aOutline = 233
+    }
+    private val placedBlocks = LinkedHashMap<BlockPos, Long>()
 
     private var selfTrap = false
     private var job: Job? = null
@@ -60,6 +76,7 @@ internal object AutoTrap : Module(
     init {
         onDisable {
             selfTrap = false
+            placedBlocks.clear()
         }
 
         safeListener<TickEvent.Post> {
@@ -69,6 +86,31 @@ internal object AutoTrap : Module(
                 sendPlayerPacket {
                     cancelAll()
                 }
+            }
+
+            // Clean up old renders
+            if (renderFade) {
+                val currentTime = System.currentTimeMillis()
+                placedBlocks.entries.removeAll { currentTime - it.value > renderTime }
+            }
+        }
+
+        safeListener<Render3DEvent> {
+            if (render) {
+                renderer.aFilled = if (renderFade) 15 else 31
+                renderer.aOutline = if (renderFade) 100 else 233
+
+                placedBlocks.keys.forEach { pos ->
+                    val box = AxisAlignedBB(pos)
+                    if (renderFade) {
+                        val timeLeft = renderTime - (System.currentTimeMillis() - placedBlocks[pos]!!)
+                        val alpha = (timeLeft.toFloat() / renderTime * 255).toInt().coerceIn(0, 255)
+                        renderer.add(box, renderColor.alpha(alpha))
+                    } else {
+                        renderer.add(box, renderColor)
+                    }
+                }
+                renderer.render(true)
             }
         }
     }
@@ -118,6 +160,7 @@ internal object AutoTrap : Module(
 
             placeCount++
             placed.add(placingInfo.placedPos)
+            placedBlocks[placingInfo.placedPos] = System.currentTimeMillis()
             val slot = getObby() ?: break
 
             runSafeSuspend {
@@ -189,7 +232,7 @@ internal object AutoTrap : Module(
                 player.onGround
             )
             connection.sendPacket(rotationPacket)
-            delay((40.0f / placeSpeed).toLong())
+            delay((delay / placeSpeed).toLong())
         }
 
         player.spoofSneak {
@@ -198,12 +241,11 @@ internal object AutoTrap : Module(
             }
         }
 
-
         player.swingArm(EnumHand.MAIN_HAND)
         if (needRotation) {
-            delay((10.0f / placeSpeed).toLong())
+            delay((delay / placeSpeed).toLong())
         } else {
-            delay((50.0f / placeSpeed).toLong())
+            delay((delay / placeSpeed).toLong())
         }
     }
 
@@ -219,7 +261,8 @@ internal object AutoTrap : Module(
                 BlockPos(-1, 1, 0),
                 BlockPos(0, 1, 1),
                 BlockPos(0, 1, -1),
-                BlockPos(0, 2, 0)
+                BlockPos(0, 2, 0),
+                BlockPos(0, 3, 0)
             )
         ),
         CRYSTAL_TRAP(
@@ -232,7 +275,8 @@ internal object AutoTrap : Module(
                 BlockPos(-1, 1, 0),
                 BlockPos(-1, 1, 1),
                 BlockPos(0, 1, 1),
-                BlockPos(0, 2, 0)
+                BlockPos(0, 2, 0),
+                BlockPos(0, 3, 0)
             )
         )
     }

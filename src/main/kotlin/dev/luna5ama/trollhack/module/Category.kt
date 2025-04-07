@@ -11,7 +11,8 @@ enum class Category(override val displayName: CharSequence) : DisplayEnum {
     MISC(TranslateType.COMMON commonKey "Misc"),
     MOVEMENT(TranslateType.COMMON commonKey "Movement"),
     PLAYER(TranslateType.COMMON commonKey "Player"),
-    RENDER(TranslateType.COMMON commonKey "Render");
+    RENDER(TranslateType.COMMON commonKey "Render"),
+    WIZARD(TranslateType.COMMON commonKey "Wizard");
 
     override fun toString() = displayString
 }

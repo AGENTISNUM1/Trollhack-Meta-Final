@@ -4,7 +4,7 @@ import dev.luna5ama.trollhack.TrollHackMod
 import dev.luna5ama.trollhack.graphics.AnimationFlag
 import dev.luna5ama.trollhack.graphics.Easing
 import dev.luna5ama.trollhack.gui.IGuiScreen
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.setting.GuiConfig
 import dev.luna5ama.trollhack.setting.GuiConfig.setting
 import dev.luna5ama.trollhack.setting.configs.AbstractConfig
@@ -204,8 +204,8 @@ open class Component(
     private fun dockWidth(docking: dev.luna5ama.trollhack.graphics.HAlign) = width * docking.multiplier
     private fun dockHeight(docking: dev.luna5ama.trollhack.graphics.VAlign) = height * docking.multiplier
 
-    protected val scaledDisplayWidth get() = mc.displayWidth / GuiSetting.scaleFactor
-    protected val scaledDisplayHeight get() = mc.displayHeight / GuiSetting.scaleFactor
+    protected val scaledDisplayWidth get() = mc.displayWidth / ClickGUI.scaleFactor
+    protected val scaledDisplayHeight get() = mc.displayHeight / ClickGUI.scaleFactor
 
     // Update methods
     open fun onGuiDisplayed() {

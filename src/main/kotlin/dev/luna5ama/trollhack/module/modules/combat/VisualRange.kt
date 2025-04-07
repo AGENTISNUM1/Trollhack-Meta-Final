@@ -118,7 +118,7 @@ internal object VisualRange : Module(
         }
         if (oppspotted && FriendManager.isFriend(player.name)) {
             narrator.clear()
-            narrator.say("Ah pu  spotted! i repeat, Ah pu  spotted!")
+            narrator.say("awp spotted! i repeat, awp  spotted!")
         }
         
         sendNotification(player, message)

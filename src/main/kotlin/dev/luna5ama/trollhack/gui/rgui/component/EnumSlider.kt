@@ -3,7 +3,7 @@ package dev.luna5ama.trollhack.gui.rgui.component
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.IGuiScreen
 import dev.luna5ama.trollhack.gui.rgui.MouseState
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.setting.settings.impl.primitive.EnumSetting
 import dev.luna5ama.trollhack.util.extension.readableName
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
@@ -59,6 +59,6 @@ class EnumSlider(
         super.onRender(absolutePos)
         val posX = renderWidth - protectedWidth - 2.0f
         val posY = renderHeight - 2.0f - MainFontRenderer.getHeight(0.75f)
-        MainFontRenderer.drawString(valueText, posX, posY, GuiSetting.text, 0.75f)
+        MainFontRenderer.drawString(valueText, posX, posY, ClickGUI.text, 0.75f)
     }
 }

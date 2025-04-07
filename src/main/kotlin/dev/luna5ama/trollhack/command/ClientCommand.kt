@@ -6,7 +6,7 @@ import dev.luna5ama.trollhack.event.ClientExecuteEvent
 import dev.luna5ama.trollhack.event.SafeExecuteEvent
 import dev.luna5ama.trollhack.gui.hudgui.AbstractHudElement
 import dev.luna5ama.trollhack.module.AbstractModule
-import dev.luna5ama.trollhack.module.modules.client.CommandSetting
+import dev.luna5ama.trollhack.module.modules.client.ClientSettings
 import dev.luna5ama.trollhack.util.PlayerProfile
 import dev.luna5ama.trollhack.util.Wrapper
 import dev.luna5ama.trollhack.util.threads.ConcurrentScope
@@ -113,7 +113,7 @@ abstract class ClientCommand(
 
     protected companion object {
         val mc = Wrapper.minecraft
-        val prefix: String get() = CommandSetting.prefix
+        val prefix: String get() = ClientSettings.prefix
     }
 
 }

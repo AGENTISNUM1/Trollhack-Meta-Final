@@ -5,17 +5,15 @@ import dev.luna5ama.trollhack.graphics.GlStateUtils
 import dev.luna5ama.trollhack.graphics.color.ColorRGB
 import dev.luna5ama.trollhack.graphics.color.ColorUtils
 import dev.luna5ama.trollhack.module.modules.client.CustomFont
-import net.minecraft.client.Minecraft
 import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Font
 
 object MainFontRenderer : IFontRenderer {
-    private var delegate: IFontRenderer
+    private var delegate: ExtendedFontRenderer
     private val defaultFont: Font
-    private val minecraftRenderer = MinecraftFontRenderer(Minecraft.getMinecraft().fontRenderer)
 
     init {
-        this.javaClass.getResourceAsStream("/assets/trollhack/fonts/LexendDeca-Regular.ttf").use {
+        this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Orbitron.ttf").use {
             defaultFont = Font.createFont(Font.TRUETYPE_FONT, it)
         }
 
@@ -23,28 +21,39 @@ object MainFontRenderer : IFontRenderer {
     }
 
     fun reloadFonts() {
-        if (delegate is ExtendedFontRenderer) {
-            (delegate as ExtendedFontRenderer).destroy()
-        }
+        delegate.destroy()
         delegate = loadFont()
     }
 
-    private fun loadFont(): IFontRenderer {
-        return if (CustomFont.isEnabled) {
-            val font = try {
-                if (CustomFont.isDefaultFont) {
-                    defaultFont
-                } else {
-                    Font(CustomFont.fontName.value, Font.PLAIN, 64)
+    private fun loadFont(): ExtendedFontRenderer {
+        val font = try {
+            when (CustomFont.fontName.value.lowercase()) {
+                "queen" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Queen.ttf").use {
+                    Font.createFont(Font.TRUETYPE_FONT, it)
                 }
-            } catch (e: Exception) {
-                TrollHackMod.logger.warn("Failed loading main font. Using Sans Serif font.", e)
-                AbstractFontRenderer.getSansSerifFont()
+                "geo" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Geo.ttf").use {
+                    Font.createFont(Font.TRUETYPE_FONT, it)
+                }
+                "comic" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Comic.ttf").use {
+                    Font.createFont(Font.TRUETYPE_FONT, it)
+                }
+                "underdog" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Underdog.ttf").use {
+                    Font.createFont(Font.TRUETYPE_FONT, it)
+                }
+                "winkysans" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/WinkySans.ttf").use {
+                    Font.createFont(Font.TRUETYPE_FONT, it)
+                }
+                "gidole" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Gidole.ttf").use {
+                    Font.createFont(Font.TRUETYPE_FONT, it)
+                }
+                else -> defaultFont // Default to Orbitron
             }
-            DelegateFontRenderer(font)
-        } else {
-            minecraftRenderer
+        } catch (e: Exception) {
+            TrollHackMod.logger.warn("Failed loading main font. Using default Orbitron font.", e)
+            defaultFont
         }
+
+        return DelegateFontRenderer(font)
     }
 
     fun drawStringJava(string: String, posX: Float, posY: Float, color: Int, scale: Float, drawShadow: Boolean) {
@@ -77,12 +86,8 @@ object MainFontRenderer : IFontRenderer {
     }
 
     override fun getHeight(scale: Float): Float {
-        return if (CustomFont.isEnabled) {
-            (delegate as ExtendedFontRenderer).run {
-                regularGlyph.fontHeight * CustomFont.lineSpace * scale
-            }
-        } else {
-            minecraftRenderer.getHeight(scale)
+        return delegate.run {
+            regularGlyph.fontHeight * CustomFont.lineSpace * scale
         }
     }
 
@@ -104,36 +109,5 @@ object MainFontRenderer : IFontRenderer {
 
         override val shadowDist: Float
             get() = 5.0f
-    }
-
-    private class MinecraftFontRenderer(private val mcFontRenderer: net.minecraft.client.gui.FontRenderer) : IFontRenderer {
-        override fun drawString(
-            charSequence: CharSequence,
-            posX: Float,
-            posY: Float,
-            color: ColorRGB,
-            scale: Float,
-            drawShadow: Boolean
-        ) {
-            mcFontRenderer.drawString(
-                charSequence.toString(),
-                posX,
-                posY,
-                ColorUtils.rgbaToArgb(color.rgba),
-                drawShadow
-            )
-        }
-
-        override fun getWidth(text: CharSequence, scale: Float): Float {
-            return mcFontRenderer.getStringWidth(text.toString()).toFloat() * scale
-        }
-
-        override fun getWidth(char: Char, scale: Float): Float {
-            return mcFontRenderer.getCharWidth(char).toFloat() * scale
-        }
-
-        override fun getHeight(scale: Float): Float {
-            return mcFontRenderer.FONT_HEIGHT.toFloat() * scale
-        }
     }
 }

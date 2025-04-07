@@ -7,7 +7,7 @@ import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.event.safeConcurrentListener
 import dev.luna5ama.trollhack.manager.Manager
 import dev.luna5ama.trollhack.module.AbstractModule
-import dev.luna5ama.trollhack.module.modules.client.ChatSetting
+import dev.luna5ama.trollhack.module.modules.client.ClientSettings
 import dev.luna5ama.trollhack.util.accessor.packetMessage
 import dev.luna5ama.trollhack.util.extension.synchronized
 import net.minecraft.network.play.client.CPacketChatMessage
@@ -36,7 +36,7 @@ object MessageManager : Manager() {
                 // Reset the current id so we don't reach the max 32 bit integer limit (although that is not likely to happen)
                 QueuedMessage.idCounter.set(Int.MIN_VALUE)
             } else {
-                if (timer.tick(ChatSetting.delay)) {
+                if (timer.tick(ClientSettings.messagedelay)) {
                     messageQueue.pollFirst()?.let {
                         synchronized(activeModifiers) {
                             for (modifier in activeModifiers) {
@@ -51,7 +51,7 @@ object MessageManager : Manager() {
                 }
 
                 // Removes the low priority messages if it exceed the limit
-                while (messageQueue.size > ChatSetting.maxMessageQueueSize) {
+                while (messageQueue.size > ClientSettings.maxMessageQueueSize) {
                     messageQueue.pollLast()
                 }
             }

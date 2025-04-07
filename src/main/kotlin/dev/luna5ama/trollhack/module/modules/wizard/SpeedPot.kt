@@ -1,25 +1,24 @@
-package dev.luna5ama.trollhack.module.modules.exploit
+package dev.luna5ama.trollhack.module.modules.wizard
 
 import dev.fastmc.common.TickTimer
 import dev.luna5ama.trollhack.event.SafeClientEvent
-import dev.luna5ama.trollhack.event.events.TickEvent
+import dev.luna5ama.trollhack.event.events.PacketEvent
 import dev.luna5ama.trollhack.event.events.player.OnUpdateWalkingPlayerEvent
+import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.event.safeListener
-import dev.luna5ama.trollhack.event.safeParallelListener
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.ghostSwitch
+import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager
 import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager.sendPlayerPacket
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.player.FastUse
 import dev.luna5ama.trollhack.util.interfaces.DisplayEnum
-import dev.luna5ama.trollhack.util.inventory.InventoryTask
-import dev.luna5ama.trollhack.util.inventory.confirmedOrTrue
 import dev.luna5ama.trollhack.util.inventory.hasPotion
-import dev.luna5ama.trollhack.util.inventory.inventoryTask
-import dev.luna5ama.trollhack.util.inventory.operation.swapWith
-import dev.luna5ama.trollhack.util.inventory.slot.*
+import dev.luna5ama.trollhack.util.inventory.slot.allSlots
+import dev.luna5ama.trollhack.util.inventory.slot.allSlotsPrioritized
+import dev.luna5ama.trollhack.util.inventory.slot.isHotbarSlot
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
+import dev.luna5ama.trollhack.util.text.NoSpamMessage
 import dev.luna5ama.trollhack.util.world.getGroundLevel
 import net.minecraft.init.Items
 import net.minecraft.init.MobEffects
@@ -28,33 +27,30 @@ import net.minecraft.network.play.client.CPacketPlayerTryUseItem
 import net.minecraft.potion.Potion
 import net.minecraft.util.EnumHand
 
-internal object BetterPot : Module(
-    name = "BetterPot",
-    description = "yes",
-    category = Category.EXPLOIT,
-    modulePriority = 200
+internal object SpeedPot : Module(
+    name = "SpeedPot",
+    description = "speed",
+    category = Category.WIZARD,
+    modulePriority = 100
 ) {
-    private val ghostSwitchBypass by setting("Ghost Switch Bypass", HotbarSwitchManager.Override.NONE)
-    private val keepHealInHotbar by setting("Keep Heal Potion In Hotbar", true)
-    private val healHotbar by setting("Heal Potion Hotbar", 7, 1..9, 1)
-    private val healHealth by setting("Heal Health", 12.0f, 0.0f..20.0f, 0.5f)
-    private val healDelay by setting("Heal Delay", 500, 0..10000, 50)
-    private var currentPotion = PotionType.NONE
+    private val ghostSwitchBypass = HotbarSwitchManager.Override.NONE
+    private val speed = true
+    private val speedDelay by setting("Speed Delay", 5000, 0..10000, 50, SpeedPot::speed)
+    private val debug by setting("debug messages", false)
+    private val hotbarSlot = 1
 
-    private var lastTask: InventoryTask? = null
+    private var currentPotion = PotionType.NONE
 
     override fun getHudInfo(): String {
         return currentPotion.displayString
     }
 
     init {
-        onEnable {
-            if (!FastUse.isEnabled) FastUse.enable()
-        }
         onDisable {
             currentPotion = PotionType.NONE
-            lastTask = null
         }
+
+        listener<PacketEvent.PostReceive> {}
 
         safeListener<OnUpdateWalkingPlayerEvent.Pre> {
             if (!groundCheck()) {
@@ -78,27 +74,17 @@ internal object BetterPot : Module(
         safeListener<OnUpdateWalkingPlayerEvent.Post> {
             val potionType = currentPotion
             if (potionType == PotionType.NONE) return@safeListener
+            if (PlayerPacketManager.prevRotation.y <= 85.0f || PlayerPacketManager.rotation.y <= 85.0f) return@safeListener
+
             getSlot(potionType)?.let {
                 ghostSwitch(ghostSwitchBypass, it) {
                     connection.sendPacket(CPacketPlayerTryUseItem(EnumHand.MAIN_HAND))
                     potionType.timer.reset()
                     currentPotion = PotionType.NONE
-
+                    if (debug && mc.player.isPotionActive(MobEffects.SPEED)) {
+                        NoSpamMessage.sendMessage("$chatName you now have speed")
+                    }
                 }
-            }
-        }
-
-        safeParallelListener<TickEvent.Post> {
-            if (!keepHealInHotbar) return@safeParallelListener
-            if (player.hotbarSlots.hasPotion(PotionType.INSTANT_HEALTH)) return@safeParallelListener
-            if (!lastTask.confirmedOrTrue) return@safeParallelListener
-            if (currentPotion != PotionType.NONE && currentPotion != PotionType.INSTANT_HEALTH) return@safeParallelListener
-
-            val slotFrom = player.allSlots.findPotion(PotionType.INSTANT_HEALTH) ?: return@safeParallelListener
-            lastTask = inventoryTask {
-                swapWith(slotFrom, player.hotbarSlots[healHotbar - 1])
-                postDelay(100L)
-                runInGui()
             }
         }
     }
@@ -118,21 +104,18 @@ internal object BetterPot : Module(
                 val stack = it.stack
                 stack.item == Items.SPLASH_POTION && stack.hasPotion(potionType.potion)
             }.minByOrNull {
-                if (it.isHotbarSlot) -1 else it.stack.count
+                if (it.isHotbarSlot && it.slotIndex == hotbarSlot - 1) -2 // Prioritize the specified hotbar slot
+                else if (it.isHotbarSlot) -1 // Then other hotbar slots
+                else it.stack.count
             }
     }
 
-    private fun List<Slot>.hasPotion(potionType: PotionType): Boolean {
-        return hasItem(Items.SPLASH_POTION) { itemStack ->
-            itemStack.hasPotion(potionType.potion)
-        }
-    }
-
     private enum class PotionType(override val displayName: CharSequence, val potion: Potion) : DisplayEnum {
-        INSTANT_HEALTH("Heal", MobEffects.INSTANT_HEALTH) {
+        SPEED("Speed", MobEffects.SPEED) {
             override fun check(event: SafeClientEvent): Boolean {
-                return timer.tick(healDelay)
-                        && event.player.health <= healHealth
+                return speed
+                        && timer.tick(speedDelay)
+                        && !event.player.isPotionActive(MobEffects.SPEED)
                         && super.check(event)
             }
         },
@@ -146,7 +129,7 @@ internal object BetterPot : Module(
         val timer = TickTimer()
 
         open fun check(event: SafeClientEvent): Boolean {
-            return event.player.allSlots.hasPotion(this)
+            return event.player.allSlots.any { it.stack.hasPotion(this.potion) }
         }
 
         companion object {

@@ -2,7 +2,7 @@ package dev.luna5ama.trollhack.graphics
 
 import dev.fastmc.common.ceilToInt
 import dev.luna5ama.trollhack.event.AlwaysListening
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.interfaces.Helper
 
 object Resolution : AlwaysListening, Helper {
@@ -19,10 +19,10 @@ object Resolution : AlwaysListening, Helper {
         get() = mc.displayWidth.toFloat()
 
     val trollWidthF
-        get() = widthF / GuiSetting.scaleFactor
+        get() = widthF / ClickGUI.scaleFactor
 
     val trollHeightF
-        get() = heightF / GuiSetting.scaleFactor
+        get() = heightF / ClickGUI.scaleFactor
 
     val trollWidthI
         get() = trollWidthF.ceilToInt()

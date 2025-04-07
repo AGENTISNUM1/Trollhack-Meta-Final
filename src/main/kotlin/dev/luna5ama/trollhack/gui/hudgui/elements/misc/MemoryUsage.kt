@@ -4,7 +4,7 @@ import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.event.events.RunGameLoopEvent
 import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.gui.hudgui.LabelHud
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import java.util.*
 import kotlin.math.max
 
@@ -41,21 +41,21 @@ internal object MemoryUsage : LabelHud(
     }
 
     override fun SafeClientEvent.updateText() {
-        displayText.add(getUsedMB().toString(), GuiSetting.text)
+        displayText.add(getUsedMB().toString(), ClickGUI.text)
 
         if (showAllocations) {
-            displayText.add(getAllocationText(), GuiSetting.text)
+            displayText.add(getAllocationText(), ClickGUI.text)
         }
         if (showAllocated) {
             val allocatedMemory = Runtime.getRuntime().totalMemory() / BYTE_TO_MB
-            displayText.add(allocatedMemory.toString(), GuiSetting.text)
+            displayText.add(allocatedMemory.toString(), ClickGUI.text)
         }
         if (showMax) {
             val maxMemory = Runtime.getRuntime().maxMemory() / BYTE_TO_MB
-            displayText.add(maxMemory.toString(), GuiSetting.text)
+            displayText.add(maxMemory.toString(), ClickGUI.text)
         }
 
-        displayText.add("MB", GuiSetting.primary)
+        displayText.add("MB", ClickGUI.primary)
     }
 
     private fun getAllocationText(): String {

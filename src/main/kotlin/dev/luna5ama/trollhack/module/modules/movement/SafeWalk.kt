@@ -5,7 +5,6 @@ import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.mixins.core.entity.MixinEntity
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.player.Scaffold
 import dev.luna5ama.trollhack.util.BaritoneUtils
 import dev.luna5ama.trollhack.util.Wrapper
 import dev.luna5ama.trollhack.util.threads.runSafeOrFalse
@@ -34,7 +33,6 @@ internal object SafeWalk : Module(
             if (entityID != player.entityId) return false
             if (player.isSneaking) return false
 
-            if (Scaffold.shouldSafeWalk) return true
             if (isEnabled && (!checkFallDist && !BaritoneUtils.isPathing || !isEdgeSafe(motionX, motionZ))) return true
 
             false

@@ -5,7 +5,7 @@ import com.google.gson.JsonObject
 import dev.luna5ama.trollhack.TrollHackMod
 import dev.luna5ama.trollhack.gui.IGuiScreen
 import dev.luna5ama.trollhack.gui.rgui.component.*
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.setting.groups.SettingGroup
 import dev.luna5ama.trollhack.setting.settings.AbstractSetting
 import dev.luna5ama.trollhack.setting.settings.impl.number.NumberSetting
@@ -77,8 +77,8 @@ abstract class SettingWindow<T : Any>(
         super.onDisplayed()
 
         val mousePos = screen.mousePos
-        val screenWidth = mc.displayWidth / GuiSetting.scaleFactor
-        val screenHeight = mc.displayHeight / GuiSetting.scaleFactor
+        val screenWidth = mc.displayWidth / ClickGUI.scaleFactor
+        val screenHeight = mc.displayHeight / ClickGUI.scaleFactor
 
         forcePosX = if (mousePos.x + width <= screenWidth) {
             mousePos.x

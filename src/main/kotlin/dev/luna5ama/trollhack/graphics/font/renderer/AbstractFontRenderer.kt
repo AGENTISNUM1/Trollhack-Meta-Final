@@ -50,7 +50,6 @@ abstract class AbstractFontRenderer(font: Font, size: Float, private val texture
     private val modelViewMatrix = Matrix4f()
 
     protected fun loadFont(font: Font, size: Float, style: Style): FontGlyphs {
-        // Load fallback font
         val fallbackFont = try {
             getFallbackFont().deriveFont(style.styleConst, size)
         } catch (e: Exception) {
@@ -140,7 +139,7 @@ abstract class AbstractFontRenderer(font: Font, size: Float, private val texture
 
     companion object {
         fun getFallbackFont(): Font {
-            return Font(fallbackFonts.firstOrNull { CustomFont.availableFonts.containsKey(it) }, Font.PLAIN, 64)
+            return Font(fallbackFonts.firstOrNull { CustomFont.availableFonts.contains(it) }, Font.PLAIN, 64)
         }
 
         fun getSansSerifFont(): Font {

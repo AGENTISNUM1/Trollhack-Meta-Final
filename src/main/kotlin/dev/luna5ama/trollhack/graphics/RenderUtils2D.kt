@@ -143,6 +143,7 @@ object RenderUtils2D {
         releaseGL()
     }
 
+
     fun drawTriangleFan(center: Vec2f, vertices: Array<Vec2f>, color: ColorRGB) {
         prepareGL()
 
@@ -152,6 +153,18 @@ object RenderUtils2D {
         }
         draw(GL_TRIANGLE_FAN)
 
+        releaseGL()
+    }
+    fun drawGradientRectHorizontal(left: Float, top: Float, right: Float, bottom: Float, startColor: ColorRGB, endColor: ColorRGB) {
+        prepareGL()
+        glBegin(GL_QUADS)
+        glColor4f(startColor.rFloat, startColor.gFloat, startColor.bFloat, startColor.aFloat)
+        glVertex2f(left, top)
+        glVertex2f(left, bottom)
+        glColor4f(endColor.rFloat, endColor.gFloat, endColor.bFloat, endColor.aFloat)
+        glVertex2f(right, bottom)
+        glVertex2f(right, top)
+        glEnd()
         releaseGL()
     }
 

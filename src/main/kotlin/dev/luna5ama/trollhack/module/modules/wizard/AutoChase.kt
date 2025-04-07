@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.exploit
+package dev.luna5ama.trollhack.module.modules.wizard
 
 import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.event.events.TickEvent
@@ -21,7 +21,7 @@ import kotlin.math.sqrt
 internal object AutoChase : Module(
     name = "AutoChase",
     description = "Automatically throws ender pearls to chase players",
-    category = Category.EXPLOIT,
+    category = Category.WIZARD,
     modulePriority = 200
 ) {
     private val replicate = true

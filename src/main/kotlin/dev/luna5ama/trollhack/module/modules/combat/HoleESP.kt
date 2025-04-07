@@ -31,17 +31,17 @@ internal object HoleESP : Module(
 ) {
     private val obbyHole0 = setting("Obby Hole", true)
     private val obbyHole by obbyHole0
-    private val twoBlocksHole0 = setting("2 Blocks Hole", true)
+    val twoBlocksHole0 = setting("2 Blocks Hole", true)
     private val twoBlocksHole by twoBlocksHole0
-    private val fourBlocksHole0 = setting("4 Blocks Hole", true)
+    val fourBlocksHole0 = setting("4 Blocks Hole", true)
     private val fourBlocksHole by fourBlocksHole0
-    private val trappedHole0 = setting("Trapped Hole", true)
+    val trappedHole0 = setting("Trapped Hole", true)
     private val trappedHole by trappedHole0
-    private val bedrockColor by setting("Bedrock Color", ColorRGB(31, 255, 31), false)
-    private val obbyColor by setting("Obby Color", ColorRGB(255, 255, 31), false, obbyHole0.atTrue())
+    var bedrockColor by setting("Bedrock Color", ColorRGB(31, 255, 31), false)
+    var obbyColor by setting("Obby Color", ColorRGB(255, 255, 31), false, obbyHole0.atTrue())
     private val twoBlocksColor by setting("2 Blocks Color", ColorRGB(255, 127, 31), false, twoBlocksHole0.atTrue())
     private val fourBlocksColor by setting("4 Blocks Color", ColorRGB(255, 127, 31), false, fourBlocksHole0.atTrue())
-    private val trappedColor by setting("Trapped Color", ColorRGB(255, 31, 31), false, trappedHole0.atTrue())
+    var trappedColor by setting("Trapped Color", ColorRGB(255, 31, 31), false, trappedHole0.atTrue())
     private val renderMode0 = setting("Render Mode", RenderMode.GLOW)
     private val renderMode by renderMode0
     private val filled0 = setting("Filled", true)

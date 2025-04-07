@@ -45,6 +45,8 @@ import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.objects.Object2LongMaps
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
+import net.minecraft.block.BlockPistonBase
+import net.minecraft.block.BlockPistonExtension
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.init.Blocks
@@ -66,11 +68,11 @@ internal object AutoHoleFill : Module(
     private val bedrockHole by setting("Bedrock Hole", true)
     private val obbyHole by setting("Obby Hole", true)
     private val twoBlocksHole by setting("2 Blocks Hole", true)
-    private val fourBlocksHole by setting("4 Blocks Hole", true)
+    var fourBlocksHole by setting("4 Blocks Hole", true)
     private val targetHole by setting("Target Hole", false)
     private val predictTicks by setting("Predict Ticks", 8, 0..50, 1)
     private val detectRange by setting("Detect Range", 5.0f, 0.0f..16.0f, 0.25f)
-    private val hRange by setting("H Range", 0.5f, 0.0f..4.0f, 0.1f)
+    var hRange by setting("H Range", 0.5f, 0.0f..4.0f, 0.1f)
     private val vRange by setting("V Range", 3.0f, 0.0f..8.0f, 0.1f)
     private val distanceBalance by setting("Distance Balance", 1.0f, -5.0f..5.0f, 0.1f)
     private val fillDelay by setting("Fill Delay", 50, 0..1000, 10)
@@ -282,7 +284,10 @@ internal object AutoHoleFill : Module(
                 holeInfo.holePos.asSequence()
                     .filter { !placeMap.containsKey(it.toLong()) }
                     .filter { eyePos.distanceSqToCenter(it) <= rangeSq }
-                    .filter { world.getBlockState(it).isReplaceable }
+                    .filter { pos ->
+                        val state = world.getBlockState(pos)
+                        state.isReplaceable || state.block is BlockPistonExtension
+                    }
                     .map {
                         val box = AxisAlignedBB(
                             holeInfo.boundingBox.minX - hRange,

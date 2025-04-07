@@ -22,7 +22,7 @@ import dev.luna5ama.trollhack.manager.managers.FriendManager
 import dev.luna5ama.trollhack.manager.managers.TotemPopManager
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.*
 import dev.luna5ama.trollhack.util.extension.remove
 import dev.luna5ama.trollhack.util.inventory.originalName
@@ -60,7 +60,7 @@ internal object Nametags : Module(
     private val page = setting("Page", Page.ENTITY_TYPE)
 
     /* Entity type settings */
-    private val self = setting("Self", false, page.atValue(Page.ENTITY_TYPE))
+    private val self by setting("Self", false, page.atValue(Page.ENTITY_TYPE))
     private val experience = setting("Experience", false, page.atValue(Page.ENTITY_TYPE))
     private val items = setting("Items", true, page.atValue(Page.ENTITY_TYPE))
     private val players = setting("Players", true, page.atValue(Page.ENTITY_TYPE))
@@ -78,8 +78,27 @@ internal object Nametags : Module(
     private val line2left = setting("Line 2 Left", ContentType.NAME, page.atValue(Page.CONTENT))
     private val line2center = setting("Line 2 Center", ContentType.PING, page.atValue(Page.CONTENT))
     private val line2right = setting("Line 2 Right", ContentType.TOTAL_HP, page.atValue(Page.CONTENT))
+    private val healthBar = setting("Health Bar", true, page.atValue(Page.CONTENT))
     private val dropItemCount = setting("Drop Item Count", true, page.atValue(Page.CONTENT) and items.atTrue())
     private val maxDropItems = setting("Max Drop Items", 5, 2..16, 1, page.atValue(Page.CONTENT) and items.atTrue())
+
+    /* Colors */
+    private val healthColor1 = setting("Health Low", ColorRGB(180, 20, 20), false, page.atValue(Page.COLORS) and healthBar.atTrue())
+    private val healthColor2 = setting("Health Mid", ColorRGB(240, 220, 20), false, page.atValue(Page.COLORS) and healthBar.atTrue())
+    private val healthColor3 = setting("Health High", ColorRGB(20, 232, 20), false, page.atValue(Page.COLORS) and healthBar.atTrue())
+    private val absorptionColor = setting("Absorption", ColorRGB(234, 204, 32), false, page.atValue(Page.COLORS) and healthBar.atTrue())
+    var friendcolor by setting("FriendColor", ColorRGB(0, 232, 20), false, page.atValue(Page.COLORS))
+
+    // Ping color settings
+    private val pingColor1 = setting("Ping Excellent", ColorRGB(20, 232, 20), false, page.atValue(Page.COLORS))
+    private val pingColor2 = setting("Ping Good", ColorRGB(20, 232, 20), false, page.atValue(Page.COLORS))
+    private val pingColor3 = setting("Ping Medium", ColorRGB(20, 232, 20), false, page.atValue(Page.COLORS))
+    private val pingColor4 = setting("Ping Bad", ColorRGB(150, 0, 0), false, page.atValue(Page.COLORS))
+    private val pingColor5 = setting("Ping Terrible", ColorRGB(101, 101, 101), false, page.atValue(Page.COLORS))
+    private val pingThreshold1 = setting("Ping Threshold 1", 0f, 0f..1000f, 1f, page.atValue(Page.COLORS))
+    private val pingThreshold2 = setting("Ping Threshold 2", 20f, 0f..1000f, 1f, page.atValue(Page.COLORS))
+    private val pingThreshold3 = setting("Ping Threshold 3", 150f, 0f..1000f, 1f, page.atValue(Page.COLORS))
+    private val pingThreshold4 = setting("Ping Threshold 4", 300f, 0f..1000f, 1f, page.atValue(Page.COLORS))
 
     /* Item */
     private val mainHand = setting("Main Hand", true, page.atValue(Page.ITEM))
@@ -97,6 +116,7 @@ internal object Nametags : Module(
         page.atValue(Page.ITEM) and (mainHand.atTrue() or offhand.atTrue() or armor.atTrue())
     )
     private val itemScale = setting("Item Scale", 0.8f, 0.1f..2.0f, 0.1f, page.atValue(Page.ITEM))
+    private val background by setting("Background", true, page.atValue(Page.RENDERING))
 
     /* Rendering settings */
     private val margins = setting("Margins", 1.0f, 0.0f..4.0f, 0.1f, page.atValue(Page.RENDERING))
@@ -110,25 +130,25 @@ internal object Nametags : Module(
     private val minDistScale = setting("Min Distance Scale", 0.35f, 0.0f..1.0f, 0.05f, page.atValue(Page.RENDERING))
 
     private enum class Page {
-        ENTITY_TYPE, CONTENT, ITEM, RENDERING
+        ENTITY_TYPE, CONTENT, ITEM, RENDERING, COLORS
     }
 
     private enum class ContentType {
         NONE, NAME, TYPE, TOTAL_HP, HP, ABSORPTION, PING, DISTANCE, TOTEM_POPS
     }
 
-    private val pingColorGradient = ColorGradient(
-        ColorGradient.Stop(0f, ColorRGB(101, 101, 101)),
-        ColorGradient.Stop(0.1f, ColorRGB(20, 232, 20)),
-        ColorGradient.Stop(20f, ColorRGB(20, 232, 20)),
-        ColorGradient.Stop(150f, ColorRGB(20, 232, 20)),
-        ColorGradient.Stop(300f, ColorRGB(150, 0, 0))
+    private val pingColorGradient get() = ColorGradient(
+        ColorGradient.Stop(pingThreshold1.value, pingColor5.value),
+        ColorGradient.Stop(pingThreshold2.value, pingColor1.value),
+        ColorGradient.Stop(pingThreshold3.value, pingColor2.value),
+        ColorGradient.Stop(pingThreshold4.value, pingColor3.value),
+        ColorGradient.Stop(1000f, pingColor4.value)
     )
 
-    private val healthColorGradient = ColorGradient(
-        ColorGradient.Stop(0f, ColorRGB(180, 20, 20)),
-        ColorGradient.Stop(50f, ColorRGB(240, 220, 20)),
-        ColorGradient.Stop(100f, ColorRGB(20, 232, 20))
+    private val healthColorGradient get() = ColorGradient(
+        ColorGradient.Stop(0f, healthColor1.value),
+        ColorGradient.Stop(50f, healthColor2.value),
+        ColorGradient.Stop(100f, healthColor3.value)
     )
 
     private val line1Settings = arrayOf(line1left, line1center, line1right)
@@ -168,7 +188,7 @@ internal object Nametags : Module(
                     }
                     is EntityItem -> {
                         for (itemGroup in itemList) {
-                            if (itemGroup.add(entity)) continue@loop // If we add the item to any of the group successfully then we continue
+                            if (itemGroup.add(entity)) continue@loop
                         }
                         itemList.add(ItemGroup().apply { add(entity) })
                     }
@@ -199,7 +219,7 @@ internal object Nametags : Module(
         }
         ContentType.NAME -> {
             val name = entity.displayName.unformatted
-            val color = if (FriendManager.isFriend(name)) ColorRGB(32, 255, 32, aText.value) else getTextColor()
+            val color = if (FriendManager.isFriend(name)) friendcolor else getTextColor()
             TextComponent.TextElement(name, color)
         }
         ContentType.TYPE -> {
@@ -226,7 +246,7 @@ internal object Nametags : Module(
                 null
             } else {
                 val absorption = MathUtils.round(entity.absorptionAmount, 1).toString()
-                TextComponent.TextElement(absorption, ColorRGB(234, 204, 32, aText.value))
+                TextComponent.TextElement(absorption, absorptionColor.value.alpha(aText.value))
             }
         }
         ContentType.PING -> {
@@ -256,16 +276,16 @@ internal object Nametags : Module(
         healthColorGradient.get((entity.health / entity.maxHealth) * 100f).alpha(aText.value)
 
     fun checkEntityType(entity: Entity): Boolean {
-        return (self.value || entity != mc.renderViewEntity)
-            && (!entity.isInvisible || invisible.value)
-            && (experience.value && entity is EntityXPOrb
-            || items.value && entity is EntityItem
-            || players.value && entity is EntityPlayer && EntityUtils.playerTypeCheck(
+        return (self || entity != mc.renderViewEntity)
+                && (!entity.isInvisible || invisible.value)
+                && (experience.value && entity is EntityXPOrb
+                || items.value && entity is EntityItem
+                || players.value && entity is EntityPlayer && EntityUtils.playerTypeCheck(
             entity,
             friend = true,
             sleeping = true
         )
-            || EntityUtils.mobTypeSettings(entity, mobs.value, passive.value, neutral.value, hostile.value))
+                || EntityUtils.mobTypeSettings(entity, mobs.value, passive.value, neutral.value, hostile.value))
     }
 
     private class ItemGroup {
@@ -282,7 +302,7 @@ internal object Nametags : Module(
                 while (iterator.hasNext()) {
                     val item = iterator.next()
                     if ((items.size >= other.items.size
-                            || item.distanceSqTo(thisCenter) < item.distanceSqTo(otherCenter))
+                                || item.distanceSqTo(thisCenter) < item.distanceSqTo(otherCenter))
                         && add(item)
                     ) {
                         iterator.remove()
@@ -335,7 +355,6 @@ internal object Nametags : Module(
         }
 
         fun updateText() {
-            // Updates item count text
             val itemCountMap = TreeMap<String, Int>(Comparator.naturalOrder())
             for (entityItem in items) {
                 val itemStack = entityItem.item
@@ -423,7 +442,7 @@ internal object Nametags : Module(
                     }
                 }
 
-                getEnumHand(if (invertHand.value) EnumHandSide.RIGHT else EnumHandSide.LEFT)?.let { // Hand
+                getEnumHand(if (invertHand.value) EnumHandSide.RIGHT else EnumHandSide.LEFT)?.let {
                     val itemStack = entity.getHeldItem(it)
                     itemList.add(itemStack to getEnchantmentText(itemStack))
                 }
@@ -432,9 +451,9 @@ internal object Nametags : Module(
                     armor to getEnchantmentText(
                         armor
                     )
-                ) // Armor
+                )
 
-                getEnumHand(if (invertHand.value) EnumHandSide.LEFT else EnumHandSide.RIGHT)?.let { // Hand
+                getEnumHand(if (invertHand.value) EnumHandSide.LEFT else EnumHandSide.RIGHT)?.let {
                     val itemStack = entity.getHeldItem(it)
                     itemList.add(itemStack to getEnchantmentText(itemStack))
                 }
@@ -457,8 +476,8 @@ internal object Nametags : Module(
 
             if (drawNametagLiving(screenPos, scale, entity, textComponent) && !empty) {
                 GlStateManager.pushMatrix()
-                GlStateManager.translate(0.0f, -halfHeight, 0.0f) // Translate to top of nametag
-                GlStateManager.scale(itemScale.value, itemScale.value, 1f) // Scale to item scale
+                GlStateManager.translate(0.0f, -halfHeight, 0.0f)
+                GlStateManager.scale(itemScale.value, itemScale.value, 1f)
                 GlStateManager.translate(0.0f, -margins.value - 2.0f, 0.0f)
 
                 GlStateManager.translate(-halfWidth + 4f, -16f, 0.0f)
@@ -559,34 +578,30 @@ internal object Nametags : Module(
         val width = halfWidth + halfWidth
 
         RenderUtils2D.prepareGL()
+        if (background) {
+            RenderUtils2D.putVertex(halfWidth, -halfHeight, ClickGUI.backGround)
+            RenderUtils2D.putVertex(-halfWidth, -halfHeight, ClickGUI.backGround)
+        }
+        RenderUtils2D.putVertex(-halfWidth, halfHeight + if (healthBar.value) 3.0f else 1.0f, ClickGUI.backGround)
+        RenderUtils2D.putVertex(halfWidth, halfHeight + if (healthBar.value) 3.0f else 1.0f, ClickGUI.backGround)
 
-        if (absorption > 0.0) {
-            val absorptionColor = ColorRGB(234, 204, 32)
+        if (healthBar.value) {
+            if (absorption > 0.0) {
+                RenderUtils2D.putVertex(-halfWidth, halfHeight - 1.0f, absorptionColor.value)
+                RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, absorptionColor.value)
+                RenderUtils2D.putVertex(-halfWidth + width * absorption, halfHeight + 1.0f, absorptionColor.value)
+                RenderUtils2D.putVertex(-halfWidth + width * absorption, halfHeight - 1.0f, absorptionColor.value)
 
-            RenderUtils2D.putVertex(-halfWidth, -halfHeight, GuiSetting.backGround)
-            RenderUtils2D.putVertex(-halfWidth, halfHeight + 3.0f, GuiSetting.backGround)
-            RenderUtils2D.putVertex(halfWidth, halfHeight + 3.0f, GuiSetting.backGround)
-            RenderUtils2D.putVertex(halfWidth, -halfHeight, GuiSetting.backGround)
-
-            RenderUtils2D.putVertex(-halfWidth, halfHeight - 1.0f, absorptionColor)
-            RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, absorptionColor)
-            RenderUtils2D.putVertex(-halfWidth + width * absorption, halfHeight + 1.0f, absorptionColor)
-            RenderUtils2D.putVertex(-halfWidth + width * absorption, halfHeight - 1.0f, absorptionColor)
-
-            RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, lineColor)
-            RenderUtils2D.putVertex(-halfWidth, halfHeight + 3.0f, lineColor)
-            RenderUtils2D.putVertex(-halfWidth + width * lineProgress, halfHeight + 3.0f, lineColor)
-            RenderUtils2D.putVertex(-halfWidth + width * lineProgress, halfHeight + 1.0f, lineColor)
-        } else {
-            RenderUtils2D.putVertex(-halfWidth, -halfHeight, GuiSetting.backGround)
-            RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, GuiSetting.backGround)
-            RenderUtils2D.putVertex(halfWidth, halfHeight + 1.0f, GuiSetting.backGround)
-            RenderUtils2D.putVertex(halfWidth, -halfHeight, GuiSetting.backGround)
-
-            RenderUtils2D.putVertex(-halfWidth, halfHeight - 1.0f, lineColor)
-            RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, lineColor)
-            RenderUtils2D.putVertex(-halfWidth + width * lineProgress, halfHeight + 1.0f, lineColor)
-            RenderUtils2D.putVertex(-halfWidth + width * lineProgress, halfHeight - 1.0f, lineColor)
+                RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, lineColor)
+                RenderUtils2D.putVertex(-halfWidth, halfHeight + 3.0f, lineColor)
+                RenderUtils2D.putVertex(-halfWidth + width * lineProgress, halfHeight + 3.0f, lineColor)
+                RenderUtils2D.putVertex(-halfWidth + width * lineProgress, halfHeight + 1.0f, lineColor)
+            } else {
+                RenderUtils2D.putVertex(-halfWidth, halfHeight - 1.0f, lineColor)
+                RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, lineColor)
+                RenderUtils2D.putVertex(-halfWidth + width * lineProgress, halfHeight + 1.0f, lineColor)
+                RenderUtils2D.putVertex(-halfWidth + width * lineProgress, halfHeight - 1.0f, lineColor)
+            }
         }
 
         RenderUtils2D.draw(GL_QUADS)
@@ -618,15 +633,15 @@ internal object Nametags : Module(
 
         RenderUtils2D.prepareGL()
 
-        RenderUtils2D.putVertex(-halfWidth, -halfHeight, GuiSetting.backGround)
-        RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, GuiSetting.backGround)
-        RenderUtils2D.putVertex(halfWidth, halfHeight + 1.0f, GuiSetting.backGround)
-        RenderUtils2D.putVertex(halfWidth, -halfHeight, GuiSetting.backGround)
+        RenderUtils2D.putVertex(-halfWidth, -halfHeight, ClickGUI.backGround)
+        RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, ClickGUI.backGround)
+        RenderUtils2D.putVertex(halfWidth, halfHeight + 1.0f, ClickGUI.backGround)
+        RenderUtils2D.putVertex(halfWidth, -halfHeight, ClickGUI.backGround)
 
-        RenderUtils2D.putVertex(-halfWidth, halfHeight - 1.0f, GuiSetting.primary)
-        RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, GuiSetting.primary)
-        RenderUtils2D.putVertex(-halfWidth + width * 1.0f, halfHeight + 1.0f, GuiSetting.primary)
-        RenderUtils2D.putVertex(-halfWidth + width * 1.0f, halfHeight - 1.0f, GuiSetting.primary)
+        RenderUtils2D.putVertex(-halfWidth, halfHeight - 1.0f, ClickGUI.primary)
+        RenderUtils2D.putVertex(-halfWidth, halfHeight + 1.0f, ClickGUI.primary)
+        RenderUtils2D.putVertex(-halfWidth + width * 1.0f, halfHeight + 1.0f, ClickGUI.primary)
+        RenderUtils2D.putVertex(-halfWidth + width * 1.0f, halfHeight - 1.0f, ClickGUI.primary)
         RenderUtils2D.draw(GL_QUADS)
 
         RenderUtils2D.releaseGL()
@@ -652,5 +667,4 @@ internal object Nametags : Module(
         if (mc.gameSettings.mainHand == enumHandSide && mainHand.value) EnumHand.MAIN_HAND
         else if (mc.gameSettings.mainHand != enumHandSide && offhand.value) EnumHand.OFF_HAND
         else null
-
 }

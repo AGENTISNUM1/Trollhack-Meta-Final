@@ -164,7 +164,7 @@ internal object CevBreaker : Module(
 
     private fun SafeClientEvent.safeCheck(): Boolean {
         return player.health >= minHealth
-            && AutoOffhand.lastType != AutoOffhand.Type.TOTEM
+            && Offhand.lastType != Offhand.Type.TOTEM
     }
 
     private fun SafeClientEvent.updateTarget() {

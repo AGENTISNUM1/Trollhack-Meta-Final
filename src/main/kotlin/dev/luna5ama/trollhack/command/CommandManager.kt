@@ -4,7 +4,7 @@ import dev.luna5ama.trollhack.AsyncLoader
 import dev.luna5ama.trollhack.TrollHackMod
 import dev.luna5ama.trollhack.event.ClientExecuteEvent
 import dev.luna5ama.trollhack.event.IListenerOwner
-import dev.luna5ama.trollhack.module.modules.client.CommandSetting
+import dev.luna5ama.trollhack.module.modules.client.ClientSettings
 import dev.luna5ama.trollhack.util.ClassUtils.instance
 import dev.luna5ama.trollhack.util.text.NoSpamMessage
 import dev.luna5ama.trollhack.util.text.formatValue
@@ -18,7 +18,7 @@ import kotlin.system.measureTimeMillis
 
 object CommandManager : AbstractCommandManager<ClientExecuteEvent>(), AsyncLoader<List<Class<out ClientCommand>>> {
     override var deferred: Deferred<List<Class<out ClientCommand>>>? = null
-    val prefix: String get() = CommandSetting.prefix
+    val prefix: String get() = ClientSettings.prefix
 
     override suspend fun preLoad0(): List<Class<out ClientCommand>> {
         val classes = AsyncLoader.classes.await()

@@ -2,7 +2,7 @@ package dev.luna5ama.trollhack.gui.rgui.component
 
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.IGuiScreen
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.setting.settings.impl.other.BindSetting
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
 import org.lwjgl.input.Keyboard
@@ -47,6 +47,6 @@ class BindButton(
         protectedWidth = MainFontRenderer.getWidth(valueText, 0.75f)
         val posX = renderWidth - protectedWidth - 2.0f
         val posY = renderHeight - 2.0f - MainFontRenderer.getHeight(0.75f)
-        MainFontRenderer.drawString(valueText, posX, posY, GuiSetting.text, 0.75f)
+        MainFontRenderer.drawString(valueText, posX, posY, ClickGUI.text, 0.75f)
     }
 }

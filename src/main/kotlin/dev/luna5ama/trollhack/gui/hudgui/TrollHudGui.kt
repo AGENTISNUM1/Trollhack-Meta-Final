@@ -11,7 +11,6 @@ import dev.luna5ama.trollhack.gui.IGuiScreen.Companion.forEachWindow
 import dev.luna5ama.trollhack.gui.hudgui.component.HudButton
 import dev.luna5ama.trollhack.gui.rgui.Component
 import dev.luna5ama.trollhack.gui.rgui.windows.ListWindow
-import dev.luna5ama.trollhack.module.modules.client.Hud
 import dev.luna5ama.trollhack.module.modules.client.HudEditor
 import dev.luna5ama.trollhack.util.extension.remove
 import dev.luna5ama.trollhack.util.extension.rootName
@@ -109,7 +108,7 @@ object TrollHudGui : AbstractTrollGui() {
         listener<Render2DEvent.Troll>(-1000) {
             if (mc == null || mc.world == null || mc.player == null || mc.currentScreen == this) return@listener
 
-            if (Hud.isEnabled) {
+            if (HudEditor.enablehud) {
                 GlStateManager.tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE)
 
                 forEachWindow { window ->

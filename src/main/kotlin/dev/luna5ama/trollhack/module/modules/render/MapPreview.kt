@@ -5,7 +5,7 @@ import dev.luna5ama.trollhack.graphics.RenderUtils2D.drawRectOutline
 import dev.luna5ama.trollhack.mixins.core.gui.MixinGuiScreen
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.RenderHelper
 import net.minecraft.client.renderer.Tessellator
@@ -86,8 +86,8 @@ internal object MapPreview : Module(
         val y2 = mc.fontRenderer.FONT_HEIGHT - 14.0f
 
         // Draw the background
-        drawRectFilled(x1, y1, x2, y2, GuiSetting.backGround)
-        drawRectOutline(x1, y1, x2, y2, 1.5f, GuiSetting.primary)
+        drawRectFilled(x1, y1, x2, y2, ClickGUI.backGround)
+        drawRectOutline(x1, y1, x2, y2, 1.5f, ClickGUI.primary)
 
         // Draw the name
         mc.fontRenderer.drawStringWithShadow(stack.displayName, 2f, -15f, Color.WHITE.rgb)

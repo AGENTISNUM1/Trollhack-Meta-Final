@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.exploit
+package dev.luna5ama.trollhack.module.modules.wizard
 
 import dev.luna5ama.trollhack.event.events.TickEvent
 import dev.luna5ama.trollhack.event.safeListener
@@ -14,7 +14,7 @@ import kotlin.math.floor
 internal object CornerClip : Module(
     name = "Clip",
     description = "clips u in wall",
-    category = Category.MISC,
+    category = Category.WIZARD,
     modulePriority = 9999
 ) {
     private val delay by setting("Delay", 5, 1..10, 1)
@@ -24,8 +24,8 @@ internal object CornerClip : Module(
 
     init {
         onDisable {
-            this.packets = 0
-            this.ticks = 0
+            packets = 0
+            ticks = 0
         }
         safeListener<TickEvent.Pre> {
             if (mc.player.isMoving) {

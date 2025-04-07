@@ -11,7 +11,7 @@ import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.hudgui.HudElement
 import dev.luna5ama.trollhack.manager.managers.ChunkManager
 import dev.luna5ama.trollhack.manager.managers.FriendManager
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.EntityUtils
 import dev.luna5ama.trollhack.util.EntityUtils.isNeutral
 import dev.luna5ama.trollhack.util.EntityUtils.isPassive
@@ -106,8 +106,8 @@ internal object Radar : HudElement(
     private fun SafeClientEvent.drawBorder() {
         GlStateManager.translate(halfSize, halfSize, 0.0)
 
-        drawCircleFilled(radius = radius, color = GuiSetting.backGround)
-        drawCircleOutline(radius = radius, lineWidth = 1.5f, color = GuiSetting.text)
+        drawCircleFilled(radius = radius, color = ClickGUI.backGround)
+        drawCircleOutline(radius = radius, lineWidth = 1.5f, color = ClickGUI.text)
 
         GlStateManager.rotate(-player.rotationYaw + 180.0f, 0.0f, 0.0f, 1.0f)
     }
@@ -121,7 +121,7 @@ internal object Radar : HudElement(
         prepareGLPoint()
 
         // Player marker
-        RenderUtils2D.putVertex(0.0f, 0.0f, GuiSetting.text)
+        RenderUtils2D.putVertex(0.0f, 0.0f, ClickGUI.text)
 
         for (entity in getEntityList()) {
             val diff = EntityUtils.getInterpolatedPos(entity, partialTicks).subtract(playerPos)
@@ -272,7 +272,7 @@ internal object Radar : HudElement(
             name,
             MainFontRenderer.getWidth(name, 0.8f) * -0.5f,
             -radius,
-            GuiSetting.primary,
+            ClickGUI.primary,
             0.8f
         )
          GlStateManager.rotate(90.0f, 0.0f, 0.0f, 1.0f)

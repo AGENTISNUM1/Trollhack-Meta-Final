@@ -2,14 +2,13 @@ package dev.luna5ama.trollhack.gui.hudgui.elements.combat
 
 import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.gui.hudgui.LabelHud
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.inventory.hasPotion
 import dev.luna5ama.trollhack.util.inventory.slot.allSlots
 import dev.fastmc.common.TickTimer
 import net.minecraft.init.Items
 import net.minecraft.init.MobEffects
 import net.minecraft.item.ItemStack
-import net.minecraft.potion.Potion
 
 internal object LowItems : LabelHud(
     name = "LowItems",
@@ -36,14 +35,14 @@ internal object LowItems : LabelHud(
         if (showPotionWarning) {
             val potionThresholdAmount = (potionThreshold * 64).toInt()
             if (cachedPotionCount < potionThresholdAmount) {
-                displayText.add("Low on pots! ($cachedPotionCount/${potionThresholdAmount})", GuiSetting.primary)
+                displayText.add("Low on pots! ($cachedPotionCount/${potionThresholdAmount})", ClickGUI.primary)
             }
         }
 
         if (showBedWarning) {
             val bedThresholdAmount = (bedThreshold * 64).toInt()
             if (cachedBedCount < bedThresholdAmount) {
-                displayText.add("Low on beds! ($cachedBedCount/${bedThresholdAmount})", GuiSetting.primary)
+                displayText.add("Low on beds! ($cachedBedCount/${bedThresholdAmount})", ClickGUI.primary)
             }
         }
     }

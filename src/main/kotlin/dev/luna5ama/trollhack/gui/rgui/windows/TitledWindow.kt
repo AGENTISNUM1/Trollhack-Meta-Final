@@ -2,7 +2,7 @@ package dev.luna5ama.trollhack.gui.rgui.windows
 
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.IGuiScreen
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
 import dev.luna5ama.trollhack.util.text.format
 import net.minecraft.util.text.TextFormatting
@@ -21,6 +21,6 @@ open class TitledWindow(
 
     override fun onRender(absolutePos: Vec2f) {
         super.onRender(absolutePos)
-        MainFontRenderer.drawString(TextFormatting.BOLD format name, 3.0f, 3.5f, GuiSetting.text)
+        MainFontRenderer.drawString(TextFormatting.BOLD format name, 3.0f, 3.5f, ClickGUI.text)
     }
 }

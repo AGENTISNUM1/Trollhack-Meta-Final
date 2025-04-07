@@ -7,7 +7,7 @@ import dev.luna5ama.trollhack.event.events.RunGameLoopEvent
 import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.graphics.Easing
 import dev.luna5ama.trollhack.gui.hudgui.LabelHud
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 
 internal object CPS : LabelHud(
     name = "CPS",
@@ -52,7 +52,7 @@ internal object CPS : LabelHud(
         val deltaTime = Easing.toDelta(timer.time, 1000.0f)
         val cps = (prevCps + (currentCps - prevCps) * deltaTime)
 
-        displayText.add("%.2f".format(cps), GuiSetting.text)
-        displayText.add("CPS", GuiSetting.primary)
+        displayText.add("%.2f".format(cps), ClickGUI.text)
+        displayText.add("CPS", ClickGUI.primary)
     }
 }

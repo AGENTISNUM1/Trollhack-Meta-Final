@@ -27,7 +27,7 @@ internal object ElytraFlightNew : Module(
     private val fallTimer by setting("Fall Timer", 0.25f, 0.1f..2.0f, 0.01f)
     private val boostTimer by setting("Boost Timer", 1.08f, 1.0f..2.0f, 0.01f)
     private val minTakeoffHeight by setting("Min Takeoff Height", 0.8f, 0.0f..1.5f, 0.1f)
-    private val speed by setting("Speed", 1.5f, 0.1f..10.0f, 0.05f)
+    var speed by setting("Speed", 1.5f, 0.1f..10.0f, 0.05f)
     private val speedFast by setting("Speed Fast", 2.5f, 0.1f..10.0f, 0.05f)
     private val upSpeed by setting("Up Speed", 1.5f, 0.1f..10.0f, 0.05f)
     private val upSpeedFast by setting("Up Speed Fast", 2.5f, 0.1f..10.0f, 0.05f)

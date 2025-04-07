@@ -155,6 +155,73 @@ private val SIDES = arrayOf(
     EnumFacing.DOWN
 )
 
+private fun SafeClientEvent.checkNeighbour(
+    eyePos: Vec3d,
+    pos: BlockPos,
+    side: EnumFacing,
+    range: Float,
+    visibleSideCheck: Boolean,
+    checkReplaceable: Boolean,
+    toIgnore: HashSet<Pair<BlockPos, EnumFacing>>?
+): PlaceInfo? {
+    val offsetPos = pos.offset(side)
+    val oppositeSide = side.opposite
+
+    if (toIgnore?.add(offsetPos to oppositeSide) == false) return null
+
+    val hitVec = getHitVec(offsetPos, oppositeSide)
+    val dist = eyePos.distanceTo(hitVec)
+
+    if (dist > range) return null
+    if (visibleSideCheck && !getVisibleSides(offsetPos, true).contains(oppositeSide)) return null
+    if (checkReplaceable && world.getBlockState(offsetPos).isReplaceable) return null
+    if (!world.isPlaceable(pos)) return null
+
+    val hitVecOffset = getHitVecOffset(oppositeSide)
+    return PlaceInfo(offsetPos, oppositeSide, dist, hitVecOffset, hitVec, pos)
+}
+
+fun SafeClientEvent.getNeighbour(
+    pos: BlockPos,
+    attempts: Int = 3,
+    range: Float = 4.25f,
+    visibleSideCheck: Boolean = false,
+    sides: Array<EnumFacing> = EnumFacing.values()
+) =
+    getNeighbour(player.getPositionEyes(1.0f), pos, attempts, range, visibleSideCheck, sides, HashSet())
+
+private fun SafeClientEvent.getNeighbour(
+    eyePos: Vec3d,
+    pos: BlockPos,
+    attempts: Int,
+    range: Float,
+    visibleSideCheck: Boolean,
+    sides: Array<EnumFacing>,
+    toIgnore: HashSet<Pair<BlockPos, EnumFacing>>
+): PlaceInfo? {
+    if (!world.isPlaceable(pos)) return null
+
+    sides.forEach { side ->
+        checkNeighbour(eyePos, pos, side, range, visibleSideCheck, true, toIgnore)?.let {
+            return it
+        }
+    }
+
+    if (attempts < 2) return null
+
+    sides.forEach { posSide ->
+        val newPos = pos.offset(posSide)
+        if (!world.isPlaceable(newPos)) return@forEach
+        if (eyePos.distanceTo(newPos.toVec3dCenter()) > range + 1) return@forEach
+
+        getNeighbour(eyePos, newPos, attempts - 1, range, visibleSideCheck, sides, toIgnore)?.let {
+            return it
+        }
+    }
+
+    return null
+}
+
 fun interface PlacementSearchOption {
     fun SafeClientEvent.check(from: BlockPos, side: EnumFacing, to: BlockPos): Boolean
 

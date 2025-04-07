@@ -9,8 +9,7 @@ import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.gui.IGuiScreen
 import dev.luna5ama.trollhack.gui.rgui.InteractiveComponent
 import dev.luna5ama.trollhack.gui.rgui.MouseState
-import dev.luna5ama.trollhack.module.modules.client.GuiSetting
-import dev.luna5ama.trollhack.module.modules.client.Tooltips
+import dev.luna5ama.trollhack.module.modules.client.ClickGUI
 import dev.luna5ama.trollhack.util.delegate.FrameFloat
 import dev.luna5ama.trollhack.util.math.vector.Vec2d
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
@@ -116,7 +115,7 @@ open class Slider(
         // Slider bar
         val progress = renderProgress.getAndUpdate(progress)
         if (progress > 0.0f) {
-            RenderUtils2D.drawRectFilled(0.0f, 0.0f, renderWidth * progress, renderHeight, GuiSetting.primary)
+            RenderUtils2D.drawRectFilled(0.0f, 0.0f, renderWidth * progress, renderHeight, ClickGUI.primary)
         }
 
         // Slider hover overlay
@@ -141,14 +140,12 @@ open class Slider(
             displayText,
             2.0f + 2.0f * scale,
             1.0f - 0.025f * scale * MainFontRenderer.getHeight() + 0.05f * clickedScale * MainFontRenderer.getHeight(),
-            color = GuiSetting.text,
+            color = ClickGUI.text,
             scale = 1.0f + 0.05f * scale - 0.1f * clickedScale
         )
     }
 
     override fun onPostRender(absolutePos: Vec2f) {
-        if (Tooltips.isDisabled || description.isEmpty()) return
-
         var deltaTime = Easing.toDelta(lastStateUpdateTime)
 
         if (!(mouseState == MouseState.HOVER && deltaTime > 500L || prevState == MouseState.HOVER && shown)) return
@@ -183,15 +180,15 @@ open class Slider(
             0.0f,
             textWidth + 4.0f,
             textHeight + 4.0f,
-            color = GuiSetting.backGround.run { alpha((a * alpha).toInt()) })
-        if (GuiSetting.windowOutline) {
+            color = ClickGUI.backGround.run { alpha((a * alpha).toInt()) })
+        if (ClickGUI.windowOutline) {
             RenderUtils2D.drawRectOutline(
                 0.0f,
                 0.0f,
                 textWidth + 4.0f,
                 textHeight + 4.0f,
                 lineWidth = 1.0f,
-                color = GuiSetting.primary.alpha((255 * alpha).toInt())
+                color = ClickGUI.primary.alpha((255 * alpha).toInt())
             )
         }
 
@@ -202,8 +199,8 @@ open class Slider(
     }
 
     private fun getStateColor(state: MouseState) = when (state) {
-        MouseState.NONE -> GuiSetting.idle
-        MouseState.HOVER -> GuiSetting.hover
-        else -> GuiSetting.click
+        MouseState.NONE -> ClickGUI.idle
+        MouseState.HOVER -> ClickGUI.hover
+        else -> ClickGUI.click
     }
 }

@@ -25,43 +25,25 @@ internal object LoginMessage : Module(
     visible = false,
     modulePriority = 150
 ) {
+    private val loginmessage by setting("Message", "Hello World!")
     private val sendAfterMoving by setting(
         "Send After Moving",
         false,
         description = "Wait until you have moved after logging in"
     )
 
-    private val file = File("${TrollHackMod.DIRECTORY}/loginmsg.txt")
-    private val loginMessages = CopyOnWriteArrayList<String>()
+
     private var sent = false
     private var moved = false
 
     init {
         onEnable {
-            if (file.exists()) {
-                DefaultScope.launch(Dispatchers.IO) {
-                    try {
-                        file.forEachLine {
-                            if (it.isNotBlank()) loginMessages.add(it.trim())
-                        }
-                        NoSpamMessage.sendMessage("$chatName Loaded ${loginMessages.size} login messages!")
-                    } catch (e: Exception) {
-                        NoSpamMessage.sendError("$chatName Failed loading login messages, $e")
-                        disable()
-                    }
-                }
-            } else {
-                file.createNewFile()
-                NoSpamMessage.sendError(
-                    "$chatName Login Messages file not found!" +
-                        ", please add them in the §7loginmsg.txt§f under the §7.minecraft/trollhack§f directory."
-                )
-                disable()
+            if (loginmessage == "Hello World") {
+                NoSpamMessage.sendMessage("$chatName set a custon loginmessage using the message setting")
             }
         }
 
         onDisable {
-            loginMessages.clear()
         }
 
         listener<ConnectionEvent.Disconnect> {
@@ -71,13 +53,11 @@ internal object LoginMessage : Module(
 
         safeListener<TickEvent.Post> {
             if (!sent && (!sendAfterMoving || moved)) {
-                for (message in loginMessages) {
-                    if (MessageDetection.Command.TROLL_HACK detect message) {
-                        MessageSendUtils.sendTrollCommand(message)
+                    if (MessageDetection.Command.TROLL_HACK detect loginmessage) {
+                        MessageSendUtils.sendTrollCommand(loginmessage)
                     } else {
-                        LoginMessage.sendServerMessage(message)
+                        LoginMessage.sendServerMessage(loginmessage)
                     }
-                }
 
                 sent = true
             }

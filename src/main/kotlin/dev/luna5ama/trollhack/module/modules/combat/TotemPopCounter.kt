@@ -4,7 +4,6 @@ import dev.luna5ama.trollhack.TrollHackMod
 import dev.luna5ama.trollhack.event.events.EntityEvent
 import dev.luna5ama.trollhack.event.events.combat.TotemPopEvent
 import dev.luna5ama.trollhack.event.safeListener
-import dev.luna5ama.trollhack.gui.hudgui.elements.client.Notification
 import dev.luna5ama.trollhack.manager.managers.FriendManager
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
@@ -27,7 +26,6 @@ internal object TotemPopCounter : Module(
     private val chat by setting("Chat", true)
     private val announce by setting("Announce", Announce.CLIENT, { chat })
 
-    private val notification by setting("Notification", true)
     private val lag by setting("poplag", false)
     private enum class Announce {
         CLIENT, SERVER, BOTH
@@ -58,7 +56,7 @@ internal object TotemPopCounter : Module(
 
         safeListener<EntityEvent.Death>(-1000) {
             if (it.entity == player) {
-                Notification.send(TotemPopCounter, "$chatName Cleared totem pops count on death")
+                NoSpamMessage.sendMessage("$chatName Cleared totem pops count on death")
             }
         }
     }
@@ -100,7 +98,6 @@ internal object TotemPopCounter : Module(
             if (announce == Announce.BOTH) if (chat) NoSpamMessage.sendMessage(name.hashCode(), "$chatName $message")
             if (public) sendServerMessage(it)
             else if (chat) NoSpamMessage.sendMessage(name.hashCode(), "$chatName $message")
-            if (notification) Notification.send(this.hashCode() * 31 + name.hashCode(), message)
         }
     }
 }

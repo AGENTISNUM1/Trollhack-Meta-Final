@@ -16,12 +16,11 @@ import org.lwjgl.input.Keyboard
 
 internal object ShulkerNuker : Module(
     name = "Shulker Nuker",
-    category = Category.WIZARD,
+    category = Category.META,
     description = "Removes Shulker Boxes within range",
     modulePriority = 100
 ) {
     private val range by setting("Range", 5, 1..10, 1)
-    private val priority by setting("Priority", 1, 1..10, 1)
     private val pauseBind by setting("Pause Bind", Bind())
     private val pauseDelay by setting("Pause Delay", 1000, 100..5000, 100)
     private val detectPlayers by setting("Detect Players", false)
@@ -47,7 +46,6 @@ internal object ShulkerNuker : Module(
     }
 
     private fun SafeClientEvent.run() {
-        // Handle pause bind
         if (!pauseBind.isEmpty && Keyboard.isKeyDown(pauseBind.key)) {
             pauseTime = System.currentTimeMillis() + pauseDelay
         }
@@ -55,7 +53,6 @@ internal object ShulkerNuker : Module(
             return
         }
 
-        // Check for nearby players if in detection mode
         if (detectPlayers) {
             val nearbyEnemies = checkNearbyPlayers()
             if (!nearbyEnemies) {
@@ -64,7 +61,6 @@ internal object ShulkerNuker : Module(
             }
         }
 
-        // Find and mine shulker boxes
         val playerPos = player.betterPosition
         val shulkerPos = checkBlocksInRange(playerPos, range, BlockShulkerBox::class.java)
 
@@ -98,7 +94,7 @@ internal object ShulkerNuker : Module(
     private fun SafeClientEvent.minePos(pos: BlockPos): Boolean {
         if (!world.canBreakBlock(pos)) return false
 
-        PacketMine.mineBlock(this@ShulkerNuker, pos, priority)
+        PacketMine.mineBlock(this@ShulkerNuker, pos, 100)
         lastMinePos = pos
         return true
     }

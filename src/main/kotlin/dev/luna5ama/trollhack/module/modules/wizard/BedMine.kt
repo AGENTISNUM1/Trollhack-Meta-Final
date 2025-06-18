@@ -15,9 +15,9 @@ import net.minecraft.util.math.BlockPos
 
 internal object BedMine : Module(
     name = "Bed Mine",
-    category = Category.WIZARD,
+    category = Category.META,
     description = "Automatically mines beds near you",
-    modulePriority = 100
+    modulePriority = 67
 ) {
     private val range by setting("Range", 2.0f, 0.5f..2.0f, 0.5f)
     private val mineFeet by setting("Mine Feet", true)

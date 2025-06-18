@@ -2,10 +2,9 @@ package dev.luna5ama.trollhack.gui.hudgui.elements.world
 
 import dev.luna5ama.trollhack.event.SafeClientEvent
 import dev.luna5ama.trollhack.gui.hudgui.LabelHud
-import dev.luna5ama.trollhack.module.Module
 import dev.luna5ama.trollhack.module.modules.client.ClickGUI
+import dev.luna5ama.trollhack.util.collections.NameableSet
 import net.minecraft.potion.PotionEffect
-import java.util.*
 
 internal object EffectHud : LabelHud(
     name = "EffectHud",
@@ -22,15 +21,14 @@ internal object EffectHud : LabelHud(
             return
         }
 
-        for (effect in activePotionEffects.sortedBy { it.effectName }) {
+        displayText.clear()
+
+        activePotionEffects.sortedBy { it.effectName }.forEach { effect ->
             val effectName = getEffectName(effect)
             val amplifier = effect.amplifier + 1
             val durationText = getDurationText(effect)
 
-            val effectText = "$effectName $amplifier: "
-
-            displayText.addLine(effectText, ClickGUI.primary)
-            displayText.add(durationText, ClickGUI.text)
+            displayText.addLine("$effectName $amplifier - $durationText")
         }
     }
 

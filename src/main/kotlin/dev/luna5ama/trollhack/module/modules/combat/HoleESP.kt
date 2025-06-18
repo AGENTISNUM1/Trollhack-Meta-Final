@@ -26,7 +26,7 @@ import org.lwjgl.opengl.GL11.*
 
 internal object HoleESP : Module(
     name = "Hole ESP",
-    category = Category.COMBAT,
+    category = Category.RENDER,
     description = "Show safe holes for crystal pvp"
 ) {
     private val obbyHole0 = setting("Obby Hole", true)

@@ -19,9 +19,9 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 internal object AutoChase : Module(
-    name = "AutoChase",
+    name = "PearlChase",
     description = "Automatically throws ender pearls to chase players",
-    category = Category.WIZARD,
+    category = Category.META,
     modulePriority = 200
 ) {
     private val replicate = true

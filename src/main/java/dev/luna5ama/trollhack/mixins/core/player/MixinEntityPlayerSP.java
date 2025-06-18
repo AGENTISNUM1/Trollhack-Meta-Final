@@ -5,7 +5,7 @@ import dev.luna5ama.trollhack.event.events.player.OnUpdateWalkingPlayerEvent;
 import dev.luna5ama.trollhack.event.events.player.PlayerMoveEvent;
 import dev.luna5ama.trollhack.manager.managers.MessageManager;
 import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager;
-import dev.luna5ama.trollhack.module.modules.chat.PortalChat;
+import dev.luna5ama.trollhack.module.modules.misc.PortalChat;
 import dev.luna5ama.trollhack.module.modules.exploit.Satic;
 import dev.luna5ama.trollhack.module.modules.movement.Velocity;
 import dev.luna5ama.trollhack.module.modules.player.Freecam;

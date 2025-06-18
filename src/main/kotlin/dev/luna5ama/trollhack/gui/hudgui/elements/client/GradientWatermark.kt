@@ -44,7 +44,7 @@ internal object GradientWatermark : LabelHud(
         displayText.clear()
 
         val stringBuilder = StringBuilder()
-        stringBuilder.append("TrollHack - Wizard Edit")
+        stringBuilder.append("TrollHack - Meta")
         stringBuilder.append("|")
         stringBuilder.append(mc.session.username)
         stringBuilder.append("|")

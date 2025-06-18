@@ -39,7 +39,7 @@ import kotlin.math.sin
 internal object CrystalESP : Module(
     name = "Crystal ESP",
     description = "Renders ESP for End Crystals",
-    category = Category.COMBAT
+    category = Category.RENDER
 ) {
     private val onlyOwn by setting("Only Own", false)
     private val filled by setting("Filled", true)

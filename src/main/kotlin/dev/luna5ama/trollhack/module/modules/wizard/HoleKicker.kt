@@ -32,32 +32,32 @@ import kotlin.math.pow
 
 internal object HoleKicker : Module(
     name = "HoleKicker",
-    category = Category.WIZARD,
+    category = Category.META,
     description = "Kicks players out of holes using pistons",
     modulePriority = 100
 ) {
-    private val range by setting("Range", 6, 1..8, 1)
+    private val range by setting("Range", 8.0f, 1.0f..12.0f, 0.5f)
     private val disable by setting("Auto Disable", true)
     private val rotate by setting("Rotate", true)
-    private val placeDelay by setting("Place Delay", 100, 0..500, 50)
+    private val debug by setting("Debug", false)
+    private val breakCrystal by setting("Break Crystal", true)
 
     private var one = 0
     private var two = 0
     private var three = 0
     private var four = 0
     private var target: EntityPlayer? = null
-    private var lastPlaceTime = 0L
 
     init {
+        onEnable {
+            if (breakCrystal) breakCrystals()
+        }
 
         onDisable {
             resetState()
         }
 
         safeListener<TickEvent.Pre> {
-            val currentTime = System.currentTimeMillis()
-            if (currentTime - lastPlaceTime < placeDelay) return@safeListener
-
             if (!hasRequiredItems()) {
                 NoSpamMessage.sendError("$chatName Missing required items (piston & redstone block)")
                 if (disable) disable()
@@ -73,8 +73,6 @@ internal object HoleKicker : Module(
             if (disable && (one >= 4 || two >= 4 || three >= 4 || four >= 4)) {
                 disable()
             }
-
-            lastPlaceTime = currentTime
         }
     }
 
@@ -86,13 +84,20 @@ internal object HoleKicker : Module(
         target = null
     }
 
-    private fun SafeClientEvent.hasRequiredItems(): Boolean {
-        return findPistonSlot() != null && findRedstoneBlockSlot() != null
+    private fun breakCrystals() {
+        mc.world.loadedEntityList
+            .filterIsInstance<EntityEnderCrystal>()
+            .filter { !it.isDead && mc.player.getDistance(it) <= 4.0f }
+            .sortedBy { mc.player.getDistance(it) }
+            .forEach { crystal ->
+                mc.connection?.sendPacket(CPacketUseEntity(crystal))
+            }
     }
 
-    private fun SafeClientEvent.findPistonSlot() = player.allSlotsPrioritized.firstBlock<BlockPistonBase>()
-
-    private fun SafeClientEvent.findRedstoneBlockSlot() = player.allSlotsPrioritized.firstBlock(Blocks.REDSTONE_BLOCK)
+    private fun SafeClientEvent.hasRequiredItems(): Boolean {
+        return player.allSlotsPrioritized.firstBlock<BlockPistonBase>() != null &&
+                player.allSlotsPrioritized.firstBlock(Blocks.REDSTONE_BLOCK) != null
+    }
 
     private fun SafeClientEvent.findTarget(range: Double): EntityPlayer? {
         return world.playerEntities
@@ -130,76 +135,98 @@ internal object HoleKicker : Module(
         val pitch = angle[1]
 
         when {
-            abs(yaw) < 45 && pitch in -30f..30f -> handleDirection(pos, 0, 1, 1, 0, 2, 1, 1, 1, 1, 0, 1, 2, -1, 1, 1)
-            (yaw > 135 || yaw < -135) && pitch in -30f..30f -> handleDirection(pos, 0, 1, -1, 0, 2, -1, 1, 1, -1, 0, 1, -2, -1, 1, -1)
-            yaw in -135f..-45f && pitch in -30f..30f -> handleDirection(pos, 1, 1, 0, 1, 2, 0, 1, 1, 1, 2, 1, 0, 1, 1, -1)
-            yaw in 45f..135f && pitch in -30f..30f -> handleDirection(pos, -1, 1, 0, -1, 2, 0, -1, 1, 1, -2, 1, 0, -1, 1, -1)
+            pitch in -71f..71f && yaw in -51f..51f -> handleDirection(
+                pos,
+                pos.add(0, 1, 1),  // Piston position
+                listOf(
+                    pos.add(0, 2, 1),  // Redstone positions
+                    pos.add(1, 1, 1),
+                    pos.add(0, 1, 2),
+                    pos.add(-1, 1, 1)
+                ),
+                { one++ }
+            )
+            pitch in -71f..71f && (yaw >= 129f || yaw <= -129f) -> handleDirection(
+                pos,
+                pos.add(0, 1, -1),
+                listOf(
+                    pos.add(0, 2, -1),
+                    pos.add(1, 1, -1),
+                    pos.add(0, 1, -2),
+                    pos.add(-1, 1, -1)
+                ),
+                { two++ }
+            )
+            pitch in -71f..71f && yaw in -129f..-51f -> handleDirection(
+                pos,
+                pos.add(1, 1, 0),
+                listOf(
+                    pos.add(1, 2, 0),
+                    pos.add(1, 1, 1),
+                    pos.add(2, 1, 0),
+                    pos.add(1, 1, -1)
+                ),
+                { three++ }
+            )
+            pitch in -71f..71f && yaw in 51f..129f -> handleDirection(
+                pos,
+                pos.add(-1, 1, 0),
+                listOf(
+                    pos.add(-1, 2, 0),
+                    pos.add(-1, 1, 1),
+                    pos.add(-2, 1, 0),
+                    pos.add(-1, 1, -1)
+                ),
+                { four++ }
+            )
             disable -> disable()
         }
     }
 
     private fun SafeClientEvent.handleDirection(
-        basePos: BlockPos,
-        pistonX: Int, pistonY: Int, pistonZ: Int,
-        redstone1X: Int, redstone1Y: Int, redstone1Z: Int,
-        redstone2X: Int, redstone2Y: Int, redstone2Z: Int,
-        redstone3X: Int, redstone3Y: Int, redstone3Z: Int,
-        redstone4X: Int, redstone4Y: Int, redstone4Z: Int
+        targetPos: BlockPos,
+        pistonPos: BlockPos,
+        redstonePositions: List<BlockPos>,
+        counterIncrement: () -> Unit
     ) {
-        val pistonPos = basePos.add(pistonX, pistonY, pistonZ)
-        if (!isPlaceable(pistonPos)) return
+        val pistonState = world.getBlockState(pistonPos)
+        if (pistonState.block !is BlockPistonBase && !pistonState.block.isReplaceable(world, pistonPos)) {
+            return
+        }
 
-        // Place piston first
-        findPistonSlot()?.let { pistonSlot ->
-            val pistonPlaceInfo = getPlacement(
+        // Place piston
+        player.allSlotsPrioritized.firstBlock<BlockPistonBase>()?.let { pistonSlot ->
+            val pistonPlacement = getPlacement(
                 pistonPos,
                 PlacementSearchOption.range(5.0),
                 PlacementSearchOption.ENTITY_COLLISION,
                 if (rotate) PlacementSearchOption.VISIBLE_SIDE else null
-            ) ?: return
+            ) ?: return@let
 
             ghostSwitch(pistonSlot) {
-                placeBlock(pistonPlaceInfo)
+                placeBlock(pistonPlacement)
             }
 
-            // Then try to place redstone in one of the positions
-            val redstonePositions = listOf(
-                basePos.add(redstone1X, redstone1Y, redstone1Z),
-                basePos.add(redstone2X, redstone2Y, redstone2Z),
-                basePos.add(redstone3X, redstone3Y, redstone3Z),
-                basePos.add(redstone4X, redstone4Y, redstone4Z)
-            )
-
-            findRedstoneBlockSlot()?.let { redstoneSlot ->
-                redstonePositions.firstOrNull { isPlaceable(it) }?.let { redstonePos ->
-                    val redstonePlaceInfo = getPlacement(
+            // Place redstone
+            player.allSlotsPrioritized.firstBlock(Blocks.REDSTONE_BLOCK)?.let { redstoneSlot ->
+                redstonePositions.firstOrNull { redstonePos ->
+                    val state = world.getBlockState(redstonePos)
+                    state.block.isReplaceable(world, redstonePos) || state.block is BlockPistonBase
+                }?.let { redstonePos ->
+                    val redstonePlacement = getPlacement(
                         redstonePos,
                         PlacementSearchOption.range(5.0),
                         PlacementSearchOption.ENTITY_COLLISION,
                         if (rotate) PlacementSearchOption.VISIBLE_SIDE else null
-                    ) ?: return
+                    ) ?: return@let
 
                     ghostSwitch(redstoneSlot) {
-                        placeBlock(redstonePlaceInfo)
+                        placeBlock(redstonePlacement)
                     }
                 }
             }
         }
 
-        // Increment counter based on direction
-        when {
-            pistonX == 0 && pistonZ == 1 -> one++
-            pistonX == 0 && pistonZ == -1 -> two++
-            pistonX == 1 && pistonZ == 0 -> three++
-            pistonX == -1 && pistonZ == 0 -> four++
-        }
+        counterIncrement()
     }
-
-    private fun SafeClientEvent.isPlaceable(pos: BlockPos): Boolean {
-        val state = world.getBlockState(pos)
-        return state.block.isReplaceable(world, pos) ||
-                state.block is BlockPistonBase ||
-                state.block is BlockPistonExtension
-    }
-
 }

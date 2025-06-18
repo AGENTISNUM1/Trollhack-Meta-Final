@@ -22,7 +22,7 @@ import org.lwjgl.opengl.GL20.glUseProgram
 internal object CrystalChams : Module(
     name = "Crystal Chams",
     description = "Renders chams for End Crystals",
-    category = Category.COMBAT
+    category = Category.RENDER
 ) {
     val scale by setting("Scale", 1.0f, 0.1f..4.0f, 0.1f)
     val spinSpeed by setting("Spin Speed", 1.0f, 0.0f..4.0f, 0.1f)

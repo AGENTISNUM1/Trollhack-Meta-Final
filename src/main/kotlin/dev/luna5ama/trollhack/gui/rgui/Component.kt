@@ -183,7 +183,7 @@ open class Component(
     private val renderPosYFlag = AnimationFlag { time, prev, current ->
         r2aY(Easing.OUT_CUBIC.incOrDec(Easing.toDelta(time, 200.0f), prev, current))
     }
-    private val renderWidthFlag = AnimationFlag(Easing.OUT_CUBIC, 200.0f)
+    private val renderWidthFlag = AnimationFlag(Easing.OUT_CUBIC, 300.0f)
     private val renderHeightFlag = AnimationFlag(Easing.OUT_CUBIC, 200.0f)
 
     open val renderPosX by FrameFloat(renderPosXFlag::get)

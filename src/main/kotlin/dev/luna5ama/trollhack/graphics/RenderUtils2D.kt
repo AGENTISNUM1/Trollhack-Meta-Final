@@ -19,11 +19,16 @@ import org.lwjgl.opengl.GL30.glBindVertexArray
 import kotlin.math.*
 
 /**
- * Utils for basic 2D shapes rendering
+ * Utils for basic 2D shapes rendering with improved rounded corners
  */
 object RenderUtils2D {
     val mc = Wrapper.minecraft
     var vertexSize = 0
+
+    // Minimum segments for a quarter circle (90 degrees)
+    private const val MIN_SEGMENTS = 8
+    // Maximum segments for a full circle (360 degrees)
+    private const val MAX_SEGMENTS = 64
 
     fun drawItem(itemStack: ItemStack, x: Int, y: Int, text: String? = null, drawOverlay: Boolean = true) {
         glUseProgram(0)
@@ -82,6 +87,334 @@ object RenderUtils2D {
 
     fun drawRectOutline(width: Float, height: Float, lineWidth: Float = 1.0f, color: ColorRGB) {
         drawRectOutline(0.0f, 0.0f, width, height, lineWidth, color)
+    }
+
+    fun drawRoundedRectFilled(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        color: ColorRGB,
+        segments: Int = 0
+    ) {
+        if (radius <= 0f) {
+            drawRectFilled(x, y, x + width, y + height, color)
+            return
+        }
+
+        val clampedRadius = min(radius, min(width, height) / 2f)
+        val right = x + width
+        val bottom = y + height
+
+        // Calculate the number of segments for each quarter circle based on radius
+        val seg = if (segments > 0) segments else calculateOptimalSegments(clampedRadius)
+
+        // Draw the main rectangular areas
+        drawRectFilled(
+            x + clampedRadius, y,
+            right - clampedRadius, bottom,
+            color
+        )
+        drawRectFilled(
+            x, y + clampedRadius,
+            x + clampedRadius, bottom - clampedRadius,
+            color
+        )
+        drawRectFilled(
+            right - clampedRadius, y + clampedRadius,
+            right, bottom - clampedRadius,
+            color
+        )
+
+        // Draw the four rounded corners with optimized segments
+        drawArcFilled(
+            Vec2f(x + clampedRadius, y + clampedRadius),
+            clampedRadius,
+            Pair(180f, 270f),
+            seg,
+            color
+        )
+        drawArcFilled(
+            Vec2f(right - clampedRadius, y + clampedRadius),
+            clampedRadius,
+            Pair(270f, 360f),
+            seg,
+            color
+        )
+        drawArcFilled(
+            Vec2f(x + clampedRadius, bottom - clampedRadius),
+            clampedRadius,
+            Pair(90f, 180f),
+            seg,
+            color
+        )
+        drawArcFilled(
+            Vec2f(right - clampedRadius, bottom - clampedRadius),
+            clampedRadius,
+            Pair(0f, 90f),
+            seg,
+            color
+        )
+    }
+
+    fun drawRoundedRectOutline(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        lineWidth: Float = 1f,
+        color: ColorRGB,
+        segments: Int = 0
+    ) {
+        if (radius <= 0f) {
+            drawRectOutline(x, y, x + width, y + height, lineWidth, color)
+            return
+        }
+
+        val clampedRadius = min(radius, min(width, height) / 2f)
+        val right = x + width
+        val bottom = y + height
+        val seg = if (segments > 0) segments else calculateOptimalSegments(clampedRadius)
+
+        // Draw the straight lines
+        drawLine(Vec2f(x + clampedRadius, y), Vec2f(right - clampedRadius, y), lineWidth, color) // Top
+        drawLine(Vec2f(right, y + clampedRadius), Vec2f(right, bottom - clampedRadius), lineWidth, color) // Right
+        drawLine(Vec2f(x + clampedRadius, bottom), Vec2f(right - clampedRadius, bottom), lineWidth, color) // Bottom
+        drawLine(Vec2f(x, y + clampedRadius), Vec2f(x, bottom - clampedRadius), lineWidth, color) // Left
+
+        // Draw the rounded corners with optimized segments
+        drawArcOutline(
+            Vec2f(x + clampedRadius, y + clampedRadius),
+            clampedRadius,
+            Pair(180f, 270f),
+            seg,
+            lineWidth,
+            color
+        )
+        drawArcOutline(
+            Vec2f(right - clampedRadius, y + clampedRadius),
+            clampedRadius,
+            Pair(270f, 360f),
+            seg,
+            lineWidth,
+            color
+        )
+        drawArcOutline(
+            Vec2f(x + clampedRadius, bottom - clampedRadius),
+            clampedRadius,
+            Pair(90f, 180f),
+            seg,
+            lineWidth,
+            color
+        )
+        drawArcOutline(
+            Vec2f(right - clampedRadius, bottom - clampedRadius),
+            clampedRadius,
+            Pair(0f, 90f),
+            seg,
+            lineWidth,
+            color
+        )
+    }
+    fun drawGradientRectHorizontal(
+        x1: Float, y1: Float, x2: Float, y2: Float,
+        startColor: ColorRGB, endColor: ColorRGB
+    ) {
+        prepareGL()
+        putVertex(x1, y1, startColor)
+        putVertex(x2, y1, startColor)
+        putVertex(x2, y2, endColor)
+        putVertex(x1, y2, endColor)
+        draw(GL_QUADS)
+        releaseGL()
+    }
+
+    fun drawGradientRectVertical(
+        x1: Float, y1: Float, x2: Float, y2: Float,
+        startColor: ColorRGB, endColor: ColorRGB
+    ) {
+        prepareGL()
+        putVertex(x1, y1, startColor)
+        putVertex(x2, y1, endColor)
+        putVertex(x2, y2, endColor)
+        putVertex(x1, y2, startColor)
+        draw(GL_QUADS)
+        releaseGL()
+    }
+    fun drawTopRoundedRectFilled(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        color: ColorRGB,
+        segments: Int = 0
+    ) {
+        if (radius <= 0f) {
+            drawRectFilled(x, y, x + width, y + height, color)
+            return
+        }
+
+        val clampedRadius = min(radius, min(width, height) / 2f)
+        val right = x + width
+        val bottom = y + height
+        val seg = if (segments > 0) segments else calculateOptimalSegments(clampedRadius)
+
+        // Draw main rectangular area
+        drawRectFilled(x, y + clampedRadius, right, bottom, color)
+
+        // Draw top rectangular area between rounded corners
+        drawRectFilled(x + clampedRadius, y, right - clampedRadius, y + clampedRadius, color)
+
+        // Draw the two top rounded corners
+        drawArcFilled(
+            Vec2f(x + clampedRadius, y + clampedRadius),
+            clampedRadius,
+            Pair(180f, 270f),
+            seg,
+            color
+        )
+        drawArcFilled(
+            Vec2f(right - clampedRadius, y + clampedRadius),
+            clampedRadius,
+            Pair(270f, 360f),
+            seg,
+            color
+        )
+    }
+
+    fun drawBottomRoundedRectFilled(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        color: ColorRGB,
+        segments: Int = 0
+    ) {
+        if (radius <= 0f) {
+            drawRectFilled(x, y, x + width, y + height, color)
+            return
+        }
+
+        val clampedRadius = min(radius, min(width, height) / 2f)
+        val right = x + width
+        val bottom = y + height
+        val seg = if (segments > 0) segments else calculateOptimalSegments(clampedRadius)
+
+        // Draw main rectangular area
+        drawRectFilled(x, y, right, bottom - clampedRadius, color)
+
+        // Draw bottom rectangular area between rounded corners
+        drawRectFilled(x + clampedRadius, bottom - clampedRadius, right - clampedRadius, bottom, color)
+
+        // Draw the two bottom rounded corners
+        drawArcFilled(
+            Vec2f(x + clampedRadius, bottom - clampedRadius),
+            clampedRadius,
+            Pair(90f, 180f),
+            seg,
+            color
+        )
+        drawArcFilled(
+            Vec2f(right - clampedRadius, bottom - clampedRadius),
+            clampedRadius,
+            Pair(0f, 90f),
+            seg,
+            color
+        )
+    }
+
+    fun drawTopRoundedRectOutline(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        lineWidth: Float = 1f,
+        color: ColorRGB,
+        segments: Int = 0
+    ) {
+        if (radius <= 0f) {
+            drawRectOutline(x, y, x + width, y + height, lineWidth, color)
+            return
+        }
+
+        val clampedRadius = min(radius, min(width, height) / 2f)
+        val right = x + width
+        val bottom = y + height
+        val seg = if (segments > 0) segments else calculateOptimalSegments(clampedRadius)
+
+        // Draw straight lines
+        drawLine(Vec2f(x + clampedRadius, y), Vec2f(right - clampedRadius, y), lineWidth, color) // Top
+        drawLine(Vec2f(right, y + clampedRadius), Vec2f(right, bottom), lineWidth, color) // Right
+        drawLine(Vec2f(x, bottom), Vec2f(right, bottom), lineWidth, color) // Bottom
+        drawLine(Vec2f(x, y + clampedRadius), Vec2f(x, bottom), lineWidth, color) // Left
+
+        // Draw top rounded corners
+        drawArcOutline(
+            Vec2f(x + clampedRadius, y + clampedRadius),
+            clampedRadius,
+            Pair(180f, 270f),
+            seg,
+            lineWidth,
+            color
+        )
+        drawArcOutline(
+            Vec2f(right - clampedRadius, y + clampedRadius),
+            clampedRadius,
+            Pair(270f, 360f),
+            seg,
+            lineWidth,
+            color
+        )
+    }
+
+    fun drawBottomRoundedRectOutline(
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        radius: Float,
+        lineWidth: Float = 1f,
+        color: ColorRGB,
+        segments: Int = 0
+    ) {
+        if (radius <= 0f) {
+            drawRectOutline(x, y, x + width, y + height, lineWidth, color)
+            return
+        }
+
+        val clampedRadius = min(radius, min(width, height) / 2f)
+        val right = x + width
+        val bottom = y + height
+        val seg = if (segments > 0) segments else calculateOptimalSegments(clampedRadius)
+
+        // Draw straight lines
+        drawLine(Vec2f(x, y), Vec2f(right, y), lineWidth, color) // Top
+        drawLine(Vec2f(right, y), Vec2f(right, bottom - clampedRadius), lineWidth, color) // Right
+        drawLine(Vec2f(x + clampedRadius, bottom), Vec2f(right - clampedRadius, bottom), lineWidth, color) // Bottom
+        drawLine(Vec2f(x, y), Vec2f(x, bottom - clampedRadius), lineWidth, color) // Left
+
+        // Draw bottom rounded corners
+        drawArcOutline(
+            Vec2f(x + clampedRadius, bottom - clampedRadius),
+            clampedRadius,
+            Pair(90f, 180f),
+            seg,
+            lineWidth,
+            color
+        )
+        drawArcOutline(
+            Vec2f(right - clampedRadius, bottom - clampedRadius),
+            clampedRadius,
+            Pair(0f, 90f),
+            seg,
+            lineWidth,
+            color
+        )
     }
 
     fun drawRectOutline(x1: Float, y1: Float, x2: Float, y2: Float, lineWidth: Float = 1.0f, color: ColorRGB) {
@@ -143,7 +476,6 @@ object RenderUtils2D {
         releaseGL()
     }
 
-
     fun drawTriangleFan(center: Vec2f, vertices: Array<Vec2f>, color: ColorRGB) {
         prepareGL()
 
@@ -155,18 +487,7 @@ object RenderUtils2D {
 
         releaseGL()
     }
-    fun drawGradientRectHorizontal(left: Float, top: Float, right: Float, bottom: Float, startColor: ColorRGB, endColor: ColorRGB) {
-        prepareGL()
-        glBegin(GL_QUADS)
-        glColor4f(startColor.rFloat, startColor.gFloat, startColor.bFloat, startColor.aFloat)
-        glVertex2f(left, top)
-        glVertex2f(left, bottom)
-        glColor4f(endColor.rFloat, endColor.gFloat, endColor.bFloat, endColor.aFloat)
-        glVertex2f(right, bottom)
-        glVertex2f(right, top)
-        glEnd()
-        releaseGL()
-    }
+
 
     fun drawTriangleStrip(vertices: Array<Vec2f>, color: ColorRGB) {
         prepareGL()
@@ -250,20 +571,31 @@ object RenderUtils2D {
         segments: Int
     ): Array<Vec2f> {
         val range = max(angleRange.first, angleRange.second) - min(angleRange.first, angleRange.second)
-        val seg = calcSegments(segments, radius, range)
+        val seg = if (segments > 0) segments else calculateOptimalSegments(radius, range)
         val segAngle = (range / seg.toFloat())
 
         return Array(seg + 1) {
             val angle = (it * segAngle + angleRange.first).toRadians()
-            val unRounded = Vec2f(sin(angle), -cos(angle)).times(radius).plus(center)
-            Vec2f(MathUtils.round(unRounded.x, 8), MathUtils.round(unRounded.y, 8))
+            Vec2f(
+                center.x + radius * sin(angle),
+                center.y - radius * cos(angle)
+            )
         }
     }
 
-    private fun calcSegments(segmentsIn: Int, radius: Float, range: Float): Int {
-        if (segmentsIn != -0) return segmentsIn
-        val segments = radius * 0.5 * PI * (range / 360.0)
-        return max(segments.roundToInt(), 16)
+    /**
+     * Calculates optimal number of segments for a smooth circle/arc based on radius and angle range
+     */
+    private fun calculateOptimalSegments(radius: Float, angleRange: Float = 360f): Int {
+        // Base segments on radius and angle range
+        val segments = (radius * 0.5f * PI * (angleRange / 360f)).roundToInt()
+
+        // Scale between MIN_SEGMENTS and MAX_SEGMENTS based on the angle range proportion
+        val rangeProportion = angleRange / 360f
+        val minSeg = max((MIN_SEGMENTS * rangeProportion).roundToInt(), 4)
+        val maxSeg = max((MAX_SEGMENTS * rangeProportion).roundToInt(), 16)
+
+        return segments.coerceIn(minSeg, maxSeg)
     }
 
     fun prepareGL() {

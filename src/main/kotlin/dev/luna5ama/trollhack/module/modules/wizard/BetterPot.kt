@@ -26,6 +26,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.init.Items
 import net.minecraft.init.MobEffects
 import net.minecraft.inventory.Slot
+import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.CPacketPlayerTryUseItem
 import net.minecraft.potion.Potion
 import net.minecraft.util.EnumHand
@@ -35,26 +36,27 @@ import net.minecraft.util.math.BlockPos
 internal object BetterPot : Module(
     name = "BetterPot",
     description = "yes",
-    category = Category.WIZARD,
-    modulePriority = 200
+    category = Category.META,
+    modulePriority = 9999
 ) {
     private val BAD_BLOCKS: Set<Block> = HashSet<Block>(listOf(Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.ICE, Blocks.PACKED_ICE))
     var ghostSwitchBypass by setting("Ghost Switch Bypass", HotbarSwitchManager.Override.NONE)
     var keepHealInHotbar by setting("Keep Heal Potion In Hotbar", true)
     private val healHotbar by setting("Heal Potion Hotbar", 7, 1..9, 1)
     var healHealth by setting("Heal Health", 12.0f, 0.0f..20.0f, 0.5f)
-    var healDelay by setting("Heal Delay", 500, 0..10000, 50)
+    var healDelay by setting("Heal Delay", 68, 0..300, 50)
     private var currentPotion = PotionType.NONE
-
+    private var cachedPotionCount = 0
     private var lastTask: InventoryTask? = null
 
     override fun getHudInfo(): String {
-        return currentPotion.displayString
+        return cachedPotionCount.toString()
     }
 
     init {
         onEnable {
             if (!FastUse.isEnabled) FastUse.enable()
+            cachedPotionCount = countInstantHealthPotions()
         }
         onDisable {
             currentPotion = PotionType.NONE
@@ -62,11 +64,6 @@ internal object BetterPot : Module(
         }
 
         safeListener<OnUpdateWalkingPlayerEvent.Pre> {
-            if (!groundCheck()) {
-                currentPotion = PotionType.NONE
-                return@safeListener
-            }
-
             if (currentPotion == PotionType.NONE) {
                 currentPotion = PotionType.VALUES.first {
                     it.check(this)
@@ -123,11 +120,6 @@ internal object BetterPot : Module(
         }
     }
 
-    private fun SafeClientEvent.groundCheck(): Boolean {
-        return player.onGround
-                || player.posY - world.getGroundLevel(player) < 3.0
-    }
-
     private fun SafeClientEvent.getSlot(potionType: PotionType): Slot? {
         return player.allSlotsPrioritized.findPotion(potionType)
     }
@@ -147,7 +139,14 @@ internal object BetterPot : Module(
             itemStack.hasPotion(potionType.potion)
         }
     }
-
+    private fun countInstantHealthPotions(): Int {
+        return mc.player.allSlots.sumBy { slot ->
+            if (isInstantHealthPotion(slot.stack)) slot.stack.count else 0
+        }
+    }
+    private fun isInstantHealthPotion(stack: ItemStack): Boolean {
+        return stack.item == Items.SPLASH_POTION && stack.hasPotion(MobEffects.INSTANT_HEALTH)
+    }
     private enum class PotionType(override val displayName: CharSequence, val potion: Potion) : DisplayEnum {
         INSTANT_HEALTH("Heal", MobEffects.INSTANT_HEALTH) {
             override fun check(event: SafeClientEvent): Boolean {

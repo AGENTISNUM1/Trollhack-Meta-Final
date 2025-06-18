@@ -18,9 +18,11 @@ import java.util.*
 internal object SelfTarget : Module(
     name = "SelfTarget",
     description = "target urself",
-    category = Category.WIZARD
+    category = Category.META
 ) {
     private val Bed by setting("SelfBed", false)
+    private val disableba by setting("Disable Bedaura", false, { Bed })
+    private val disablespeed by setting("Disable Speed", false, { speed })
     private val speed by setting("Enable speed", false)
     private const val ENTITY_ID = -696969421
     private var fakePlayer: EntityOtherPlayerMP? = null
@@ -63,12 +65,12 @@ internal object SelfTarget : Module(
             onMainThread {
                 removeFakePlayer()
             }
-            if (Bed && BedAura.isEnabled && enabledba) {
+            if (Bed && BedAura.isEnabled && enabledba && disableba) {
                 BedAura.disable()
                 enabledba = false
                 BedAura.timingMode = oldTimingMode!!
             }
-            if (speed && Speed.isEnabled && enabledspeed) {
+            if (speed && Speed.isEnabled && enabledspeed && disablespeed) {
                 Speed.disable()
                 enabledspeed = false
                 oldTimingMode = null
@@ -88,7 +90,6 @@ internal object SelfTarget : Module(
         safeParallelListener<TickEvent.Post> {
             val player = mc.player ?: return@safeParallelListener
 
-            // Handle safety threshold
             if (player.health < healthThreshold) {
                 if (fakePlayer != null) {
                     onMainThread {
@@ -123,7 +124,6 @@ internal object SelfTarget : Module(
             }
         }
     }
-
     private fun removeFakePlayer() {
         fakePlayer?.setDead()
         mc.world?.removeEntityFromWorld(ENTITY_ID)
@@ -131,6 +131,6 @@ internal object SelfTarget : Module(
     }
 
     private fun shouldSpawnFakePlayer(): Boolean {
-        return mc.player?.health ?: 0f >= healthThreshold
+        return (mc.player?.health ?: 0f) >= healthThreshold
     }
 }

@@ -16,12 +16,14 @@ import dev.luna5ama.trollhack.manager.managers.CombatManager
 import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager.sendPlayerPacket
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
+import dev.luna5ama.trollhack.module.modules.player.PacketMine
 import dev.luna5ama.trollhack.util.Bind
 import dev.luna5ama.trollhack.util.EntityUtils.eyePosition
 import dev.luna5ama.trollhack.util.combat.CalcContext
 import dev.luna5ama.trollhack.util.combat.CrystalDamage
 import dev.luna5ama.trollhack.util.combat.CrystalUtils
 import dev.luna5ama.trollhack.util.combat.CrystalUtils.hasValidSpaceForCrystal
+import dev.luna5ama.trollhack.util.inventory.blockBlacklist
 import dev.luna5ama.trollhack.util.inventory.slot.allSlots
 import dev.luna5ama.trollhack.util.inventory.slot.firstBlock
 import dev.luna5ama.trollhack.util.inventory.slot.hasItem
@@ -36,8 +38,11 @@ import dev.luna5ama.trollhack.util.threads.runSafe
 import dev.luna5ama.trollhack.util.world.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.minecraft.block.BlockBed
+import net.minecraft.block.state.IBlockState
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
+import net.minecraft.util.EnumFacing
 import net.minecraft.util.math.AxisAlignedBB
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -46,98 +51,51 @@ import kotlin.math.max
 
 @CombatManager.CombatModule
 internal object CrystalBasePlace : Module(
-    name = "Crystal Base Place",
+    name = "CrystalBasePlace",
     description = "Places obby for placing crystal on",
     category = Category.COMBAT,
     modulePriority = 90
 ) {
-    private val manualPlaceBind by setting("Bind Manual Place", Bind(), {
-        runSafe {
-            if (isEnabled && CombatManager.isOnTopPriority(CrystalBasePlace) && !CombatSetting.pause) {
-                prePlace(minDamageIncManual)
-            }
-        }
-    })
+    private val manualPlaceBind by setting("Place Bind", Bind())
     private val minDamage by setting("Min Damage", 8.0f, 0.0f..20.0f, 0.5f)
     private val maxSelfDamage by setting("Max Self Damage", 8.0f, 0.0f..20.0f, 0.5f)
-    private val minDamageIncManual by setting("Min Damage Inc Inactive", 2.0f, 0.0f..20.0f, 0.25f)
-    private val minDamageIncInactive by setting("Min Damage Inc Inactive", 4.0f, 0.0f..20.0f, 0.25f)
-    private val minDamageIncActive by setting("Min Damage Inc Active", 8.0f, 0.0f..20.0f, 0.25f)
     private val range by setting("Range", 4.0f, 0.0f..8.0f, 0.5f)
     private val delay by setting("Delay", 20, 0..50, 5)
 
     private val timer = TickTimer(TimeUnit.TICKS)
     private val renderer = ESPRenderer().apply { aFilled = 33; aOutline = 233 }
-    private var inactiveTicks = 0
     private var rotationTo: Vec3d? = null
-
-    override fun isActive(): Boolean {
-        return isEnabled && inactiveTicks < 4
-    }
-
-    override fun getHudInfo(): String {
-        return if (inactiveTicks <= 10) {
-            "Active"
-        } else {
-            ""
-        }
-    }
 
     init {
         onDisable {
-            inactiveTicks = 0
+            rotationTo = null
         }
 
         listener<Render3DEvent> {
-            val clear = inactiveTicks >= 30
-            renderer.render(clear)
+            renderer.render(false) // Don't auto-clear, only clear when disabled
         }
 
         safeListener<OnUpdateWalkingPlayerEvent.Pre> {
-            if (isActive()) {
-                rotationTo?.let { hitVec ->
-                    sendPlayerPacket {
-                        rotate(getRotationTo(hitVec))
-                    }
+            rotationTo?.let { hitVec ->
+                sendPlayerPacket {
+                    rotate(getRotationTo(hitVec))
                 }
-            } else {
-                rotationTo = null
-            }
-        }
-
-        safeParallelListener<TickEvent.Post> {
-            inactiveTicks++
-
-            if (CombatManager.isOnTopPriority(CrystalBasePlace)
-                && !CombatSetting.pause
-                && (TrollAura.isEnabled || ZealotCrystalPlus.isEnabled)
-                && player.allSlots.hasItem(Items.END_CRYSTAL)
-            ) {
-                prePlace(if (checkInactivity()) minDamageIncInactive else minDamageIncActive)
             }
         }
     }
 
-    private fun checkInactivity(): Boolean {
-        return if (ZealotCrystalPlus.isEnabled) {
-            System.currentTimeMillis() - ZealotCrystalPlus.lastActiveTime > 500L
-        } else {
-            TrollAura.isEnabled && TrollAura.inactiveTicks > 10
-        }
-    }
-
-    fun SafeClientEvent.prePlace(minDamageInc: Float) {
-        if (rotationTo != null || !timer.tick(delay)) return
+    fun SafeClientEvent.prePlace(minDamage: Float) {
+        if (!timer.tick(delay)) return
 
         val slot = player.hotbarSlots.firstBlock(Blocks.OBSIDIAN) ?: return
         val eyePos = player.eyePosition
         val posList = VectorUtils.getBlockPosInSphere(eyePos, range)
-            .filter { hasValidSpaceForCrystal(it) }
+            .filter { isValidBasePos(it)}
             .filter { world.isPlaceable(it) }
             .toList()
 
         ConcurrentScope.launch {
-            val placeInfo = getPlaceInfo(eyePos, posList, minDamageInc)
+            val placeInfo = getPlaceInfo(eyePos, posList, minDamage)
 
             if (placeInfo != null) {
                 rotationTo = placeInfo.hitVec
@@ -149,7 +107,6 @@ internal object CrystalBasePlace : Module(
                         )
                     )
                 )
-                inactiveTicks = 0
                 timer.reset()
 
                 delay(50)
@@ -157,21 +114,16 @@ internal object CrystalBasePlace : Module(
                     placeBlock(placeInfo, slot)
                     Notification.send(CrystalBasePlace, "$chatName Obsidian placed")
                 }
-            } else {
-                timer.reset(-max(delay - 1, 0) * 50L)
             }
         }
     }
 
-    private fun SafeClientEvent.getPlaceInfo(eyePos: Vec3d, posList: List<BlockPos>, minDamageInc: Float): PlaceInfo? {
+    private fun SafeClientEvent.getPlaceInfo(eyePos: Vec3d, posList: List<BlockPos>, minDamage: Float): PlaceInfo? {
         val contextSelf = CombatManager.contextSelf ?: return null
         val contextTarget = CombatManager.contextTarget ?: return null
 
         val mutableBlockPos = BlockPos.MutableBlockPos()
         val cacheList = PriorityQueue<CrystalDamage>(compareByDescending { it.targetDamage })
-        val maxCurrentDamage = CombatManager.placeMap.entries
-            .filter { eyePos.distanceToCenter(it.key) < range }
-            .maxOfOrNull { it.value.targetDamage } ?: 0.0f
 
         for (pos in posList) {
             if (!hasNeighbor(pos)) continue
@@ -180,9 +132,8 @@ internal object CrystalBasePlace : Module(
             if (!contextSelf.checkColliding(crystalPos)) continue
             if (!contextTarget.checkColliding(crystalPos)) continue
 
-            // Damage check
             val crystalDamage = calculateDamage(contextSelf, contextTarget, eyePos, crystalPos, pos, mutableBlockPos)
-            if (!checkDamage(crystalDamage, maxCurrentDamage, minDamageInc)) continue
+            if (crystalDamage.selfDamage > maxSelfDamage || crystalDamage.targetDamage < minDamage) continue
 
             cacheList.add(crystalDamage)
         }
@@ -203,7 +154,42 @@ internal object CrystalBasePlace : Module(
 
         return null
     }
+    private fun SafeClientEvent.isValidBasePos(basePos: BlockPos): Boolean {
+        return world.getBlockState(basePos).isSideSolid(world, basePos, EnumFacing.UP)
+    }
 
+    private class CalcInfo(
+        val side: EnumFacing,
+        val hitVec: Vec3d,
+        val basePosFoot: BlockPos,
+        val basePosHead: BlockPos,
+        val bedPosFoot: BlockPos,
+        val bedPosHead: BlockPos,
+    )
+
+    private fun SafeClientEvent.isValidBedPos(ignoreNonFullBox: Boolean, calcInfo: CalcInfo): Boolean {
+        val headState = world.getBlockState(calcInfo.bedPosHead)
+        val footState = world.getBlockState(calcInfo.bedPosFoot)
+
+        val headBlock = headState.block
+        val footBlock = footState.block
+
+        return (checkBedBlock(ignoreNonFullBox, calcInfo.bedPosFoot, footState) || footBlock == Blocks.BED)
+                && (checkBedBlock(ignoreNonFullBox, calcInfo.bedPosHead, headState)
+                || headBlock == Blocks.BED
+                && headState.getValue(BlockBed.PART) == BlockBed.EnumPartType.HEAD
+                && headState.getValue(BlockBed.FACING) == calcInfo.side)
+    }
+    private fun checkBedBlock(
+        ignoreNonFullBox: Boolean,
+        pos: BlockPos,
+        state: IBlockState,
+    ): Boolean {
+        val block = state.block
+        return block == Blocks.AIR
+                || PacketMine.isInstantMining(pos)
+                || ignoreNonFullBox && !blockBlacklist.contains(block) && block != Blocks.BED && !state.isFullBox
+    }
     private fun calculateDamage(
         contextSelf: CalcContext,
         contextTarget: CalcContext?,
@@ -241,9 +227,4 @@ internal object CrystalBasePlace : Module(
             contextSelf.currentPos.distanceTo(crystalPos)
         )
     }
-
-    private fun checkDamage(crystalDamage: CrystalDamage, maxCurrentDamage: Float, minDamageInc: Float) =
-        crystalDamage.selfDamage <= maxSelfDamage
-            && (crystalDamage.targetDamage >= minDamage
-            && (crystalDamage.targetDamage - maxCurrentDamage >= minDamageInc))
 }

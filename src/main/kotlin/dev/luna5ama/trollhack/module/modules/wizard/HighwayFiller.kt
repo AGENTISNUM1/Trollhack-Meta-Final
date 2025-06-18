@@ -36,16 +36,13 @@ import kotlin.math.sin
 
 internal object HighwayFiller : Module(
     name = "Highway Filler",
-    category = Category.WIZARD,
+    category = Category.META,
     description = "NOOOO AAAA NOO"
 ) {
-    private val swapMode by setting("Swap", SwapMode.SILENT)
-    private val packet by setting("Packet", false)
     private val rotate by setting("Rotate", true)
     private val placeDelay by setting("Delay", 100, 0..500, 10)
     private val wallHeight by setting("Height", 3, 1..5, 1)
     private val wallWidth by setting("Width", 3, 1..6, 1)
-    private val wallDistance by setting("Distance", 2, 0..3, 1)
     private val render by setting("Render", true)
     private val renderColor by setting("Render Color", ColorRGB(255, 0, 0), false, { render })
     private val renderFade by setting("Render Fade", true, { render })
@@ -109,8 +106,8 @@ internal object HighwayFiller : Module(
         val forward = Vec3d(forwardX, 0.0, forwardZ)
         val right = Vec3d(-forwardZ, 0.0, forwardX)
 
-        val centerX = player.posX + forwardX * wallDistance
-        val centerZ = player.posZ + forwardZ * wallDistance
+        val centerX = player.posX + forwardX * 2
+        val centerZ = player.posZ + forwardZ * 2
         val horizontalOffset = (wallWidth - 1) / 2.0
         val baseX = centerX - right.x * horizontalOffset
         val baseZ = centerZ - right.z * horizontalOffset
@@ -173,7 +170,7 @@ internal object HighwayFiller : Module(
         }
 
         player.spoofSneak {
-            if (swapMode != SwapMode.OFF && !(player.heldItemMainhand.item is net.minecraft.item.ItemBlock
+            if (!(player.heldItemMainhand.item is net.minecraft.item.ItemBlock
                         && getBlockFromItem(player.heldItemMainhand.item) == Blocks.OBSIDIAN)) {
                 ghostSwitch(slot) {
                     connection.sendPacket(placePacket)
@@ -195,11 +192,5 @@ internal object HighwayFiller : Module(
             slot.stack.item is net.minecraft.item.ItemBlock
                     && getBlockFromItem(slot.stack.item) == Blocks.OBSIDIAN
         }
-    }
-
-    private enum class SwapMode {
-        OFF,
-        NORMAL,
-        SILENT
     }
 }

@@ -1,8 +1,9 @@
-package dev.luna5ama.trollhack.module.modules.chat
+package dev.luna5ama.trollhack.module.modules.player
 
 import dev.luna5ama.trollhack.manager.managers.MessageManager.newMessageModifier
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
+import dev.luna5ama.trollhack.module.modules.misc.Spammer
 import dev.luna5ama.trollhack.util.math.MathUtils
 import dev.luna5ama.trollhack.util.text.MessageDetection
 import kotlin.math.min
@@ -10,7 +11,7 @@ import kotlin.random.Random
 
 internal object FancyChat : Module(
     name = "Fancy Chat",
-    category = Category.CHAT,
+    category = Category.PLAYER,
     description = "Makes messages you send fancy",
     visible = false,
     modulePriority = 100
@@ -20,7 +21,7 @@ internal object FancyChat : Module(
     private val green by setting(">", false)
     private val blue by setting("`", false)
     private val mock by setting("mOcK", false)
-    private val randomCase by setting("Random Case", true, ::mock)
+    private val randomCase by setting("Random Case", true, FancyChat::mock)
     private val commands by setting("Commands", false)
     private val spammer by setting("Spammer", false)
 

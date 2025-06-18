@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.chat
+package dev.luna5ama.trollhack.module.modules.player
 
 import dev.luna5ama.trollhack.TrollHackMod
 import dev.luna5ama.trollhack.event.events.PacketEvent
@@ -20,7 +20,7 @@ import java.util.regex.Pattern
 
 internal object AntiSpam : Module(
     name = "Anti Spam",
-    category = Category.CHAT,
+    category = Category.PLAYER,
     description = "Removes spam and advertising from the chat",
     visible = false
 ) {

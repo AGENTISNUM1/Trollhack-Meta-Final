@@ -45,7 +45,7 @@ internal object MainMenu : AbstractModule(
 
     @Suppress("unused")
     enum class Title(override val displayName: CharSequence, val titleName: String) : DisplayEnum {
-        TROLL_HACK("Troll Hack", "TROLL HACK"),
+        TROLL_HACK("Troll Hack", "TROLLHACK META"),
         MINECRAFT("Minecraft", "MINECRAFT"),
     }
 

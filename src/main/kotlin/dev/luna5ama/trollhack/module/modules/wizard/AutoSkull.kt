@@ -24,7 +24,7 @@ import net.minecraft.util.math.BlockPos
 
 internal object AutoSkull : Module(
     name = "AutoSkull",
-    category = Category.WIZARD,
+    category = Category.META,
     description = "Places a skull at your feet and disables"
 ) {
     private val ghostSwitchBypass by setting("Ghost Switch Bypass", HotbarSwitchManager.Override.DEFAULT)
@@ -32,7 +32,6 @@ internal object AutoSkull : Module(
     private val placeIfSurrounded by setting("Place If Surrounded", false)
     private val placeIfSandAbove by setting("Place If Sand Above", false)
     private val torchMode by setting("Torch Mode", false)
-    private val antiPiston by setting("Anti Piston", false)
     init {
         safeListener<TickEvent.Post> {
             if (isEnabled) {
@@ -76,10 +75,10 @@ internal object AutoSkull : Module(
         val playerPos = player.betterPosition
         val blockBelow = playerPos.down()
         if (world.getBlockState(blockBelow).isReplaceable) {
-            NoSpamMessage.sendMessage("$chatName Cannot place skull")
+            NoSpamMessage.sendMessage("$chatName Cannot place!")
             return
         } else if (!world.getBlockState(blockBelow).isFullBlock) {
-            NoSpamMessage.sendMessage("$chatName Cannot place skull!")
+            NoSpamMessage.sendMessage("$chatName Cannot place!")
             return
         }
 

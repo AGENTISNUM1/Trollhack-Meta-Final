@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.combat
+package dev.luna5ama.trollhack.module.modules.wizard
 
 import dev.fastmc.common.TickTimer
 import dev.fastmc.common.TimeUnit
@@ -8,11 +8,13 @@ import dev.luna5ama.trollhack.event.safeParallelListener
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.ghostSwitch
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
+import dev.luna5ama.trollhack.module.modules.combat.AutoMend
 import dev.luna5ama.trollhack.util.inventory.*
 import dev.luna5ama.trollhack.util.inventory.operation.action
 import dev.luna5ama.trollhack.util.inventory.operation.pickUp
 import dev.luna5ama.trollhack.util.inventory.operation.quickMove
 import dev.luna5ama.trollhack.util.inventory.operation.swapWith
+import dev.luna5ama.trollhack.util.inventory.operation.throwAll
 import dev.luna5ama.trollhack.util.inventory.slot.*
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.init.Enchantments
@@ -26,15 +28,15 @@ import net.minecraft.util.EnumHand
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-internal object AutoArmor : Module(
-    name = "Auto Armor",
-    category = Category.COMBAT,
-    description = "Automatically equips armour",
+internal object AutoArmorRegear : Module(
+    name = "Auto Armor Regear",
+    category = Category.META,
+    description = "Drops all armor when enabled, then automatically equips best armor",
     modulePriority = 500
 ) {
     private val runInGui by setting("Run In GUI", true)
     private val antiGlitchArmor by setting("Anti Glitch Armor", true)
-    private val stackedArmor by setting("Stacked Armor", false)
+    private val stackedArmor by setting("Stacked Armor", true)
     private val swapSlot by setting("Swap Slot", 9, 1..9, 1, { stackedArmor })
     private val blastProtectionLeggings by setting(
         "Blast Protection Leggings",
@@ -52,10 +54,22 @@ internal object AutoArmor : Module(
 
     private val moveTimer = TickTimer(TimeUnit.TICKS)
     private var lastTask: InventoryTask? = null
+    private var hasDroppedArmor = false
 
     init {
+        onEnable {
+            hasDroppedArmor = false
+        }
+        
         safeParallelListener<TickEvent.Post> {
             if (AutoMend.isActive() || (!runInGui && mc.currentScreen is GuiContainer) || !lastTask.executedOrTrue) return@safeParallelListener
+
+            // On first enable, drop all armor first
+            if (!hasDroppedArmor) {
+                dropAllArmor()
+                hasDroppedArmor = true
+                return@safeParallelListener
+            }
 
             val armorSlots = player.armorSlots
             val isElytraOn = player.chestSlot.stack.item == Items.ELYTRA
@@ -93,6 +107,40 @@ internal object AutoArmor : Module(
         }
     }
 
+    private fun SafeClientEvent.dropAllArmor() {
+        inventoryTask {
+            // Drop all armor slots completely (handle stacked armor)
+            player.armorSlots.forEach { slot ->
+                if (slot.hasStack) {
+                    throwAll(slot)
+                }
+            }
+            
+            // Drop armor from inventory slots 5, 6, 7, 8 if any
+            listOf(5, 6, 7, 8).forEach { slotNumber ->
+                val slot = player.inventorySlots.getOrNull(slotNumber)
+                if (slot?.hasStack == true && slot.stack.item is ItemArmor) {
+                    throwAll(slot)
+                }
+            }
+            
+            postDelay(5, TimeUnit.TICKS) // Wait for items to drop
+            
+            // Double-check and drop any remaining armor
+            action {
+                player.armorSlots.forEach { slot ->
+                    while (slot.hasStack) {
+                        throwAll(slot)
+                    }
+                }
+            }
+            
+            postDelay(3, TimeUnit.TICKS) // Wait before starting equip logic
+            runInGui()
+        }
+        
+        moveTimer.reset()
+    }
 
     private fun getRawArmorValue(itemStack: ItemStack): Int {
         val item = itemStack.item
@@ -251,3 +299,4 @@ internal object AutoArmor : Module(
         }
     }
 }
+

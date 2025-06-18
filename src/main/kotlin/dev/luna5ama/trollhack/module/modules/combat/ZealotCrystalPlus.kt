@@ -17,7 +17,6 @@ import dev.luna5ama.trollhack.graphics.*
 import dev.luna5ama.trollhack.graphics.color.ColorRGB
 import dev.luna5ama.trollhack.graphics.color.setGLColor
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
-import dev.luna5ama.trollhack.gui.hudgui.elements.client.Watermark
 import dev.luna5ama.trollhack.manager.managers.*
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.ghostSwitch
 import dev.luna5ama.trollhack.manager.managers.HotbarSwitchManager.serverSideItem
@@ -468,7 +467,6 @@ internal object ZealotCrystalPlus : Module(
     init {
         onEnable {
             loopThread.interrupt()
-            TrollHackMod.logger.trace(Watermark.nameAsString)
         }
 
         onDisable {

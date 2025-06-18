@@ -40,8 +40,10 @@ internal object ClickGUI : Module(
     val fadeOutTime by setting("Fade Out Time", 0.4f, 0.0f..1.0f, 0.05f)
     var primarySetting by setting("Primary Color", ColorRGB(255, 140, 180, 220))
     var backgroundSetting by setting("Background Color", ColorRGB(40, 32, 36, 160))
+    val radius by setting("Radius", 1.7f, 0.3f..2.9f, 0.1f)
     private val textSetting by setting("Text Color", ColorRGB(255, 250, 253, 255))
     private val aHover by setting("Hover Alpha", 32, 0..255, 1)
+
 
     val primary get() = primarySetting
     val idle get() = if (primary.lightness < 0.9f) ColorRGB(255, 255, 255, 0) else ColorRGB(0, 0, 0, 0)

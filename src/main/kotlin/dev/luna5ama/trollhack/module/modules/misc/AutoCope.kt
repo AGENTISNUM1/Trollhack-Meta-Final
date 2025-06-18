@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.chat
+package dev.luna5ama.trollhack.module.modules.misc
 
 import dev.fastmc.common.TickTimer
 import dev.fastmc.common.TimeUnit
@@ -21,7 +21,7 @@ import java.io.File
 internal object AutoCope : Module(
     name = "Auto Cope",
     description = "Automatically sends excuses when you die",
-    category = Category.CHAT,
+    category = Category.MISC,
     modulePriority = 500
 ) {
     private const val NAME = "\$NAME"

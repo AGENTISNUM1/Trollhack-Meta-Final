@@ -23,7 +23,7 @@ import net.minecraft.util.text.TextFormatting
 internal object VisualRange : Module(
     name = "VisualRange",
     description = "Shows players who enter and leave range in chat",
-    category = Category.CHAT
+    category = Category.MISC
 ) {
     private final val narrator = Narrator.getNarrator()
     private val playSound by setting("Play Sound", false)
@@ -118,7 +118,7 @@ internal object VisualRange : Module(
         }
         if (oppspotted && FriendManager.isFriend(player.name)) {
             narrator.clear()
-            narrator.say("awp spotted! i repeat, awp  spotted!")
+            narrator.say("Ah Pu spotted! i repeat, Ah Pu  spotted!")
         }
         
         sendNotification(player, message)

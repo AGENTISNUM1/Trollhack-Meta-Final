@@ -8,6 +8,7 @@ import dev.luna5ama.trollhack.module.Module
 import dev.luna5ama.trollhack.process.PauseProcess.pauseBaritone
 import dev.luna5ama.trollhack.process.PauseProcess.unpauseBaritone
 import dev.luna5ama.trollhack.util.combat.CombatUtils.scaledHealth
+import dev.luna5ama.trollhack.util.interfaces.DisplayEnum
 import dev.luna5ama.trollhack.util.inventory.InventoryTask
 import dev.luna5ama.trollhack.util.inventory.confirmedOrTrue
 import dev.luna5ama.trollhack.util.inventory.inventoryTask
@@ -18,6 +19,7 @@ import dev.luna5ama.trollhack.util.inventory.slot.anyHotbarSlot
 import dev.luna5ama.trollhack.util.inventory.slot.firstItem
 import dev.luna5ama.trollhack.util.inventory.slot.storageSlots
 import dev.luna5ama.trollhack.util.threads.runSafe
+import dev.luna5ama.trollhack.util.atValue
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.init.Items
 import net.minecraft.inventory.Slot
@@ -30,17 +32,15 @@ import net.minecraft.util.EnumHand
 internal object AutoEatPlus : Module(
     name = "Auto Eat Plus",
     description = "Automatically eat",
-    category = Category.WIZARD
+    category = Category.META
 ) {
-    private val alwayseat by setting("Always Eat", false)
-    private val health by setting("Health", false, description = "Eat when ur health gets below a certain amount")
-    private val belowHealth by setting("Below Health", 10, 1..36, 1)
+    private val mode0 = setting("Mode", EatMode.HEALTH)
+    private val mode by mode0
+    private val belowHealth by setting("Below Health", 10, 1..36, 1, mode0.atValue(EatMode.HEALTH))
     private val eatBadFood by setting("Eat Bad Food", false)
-    private val onlygapples by setting("Only Gapples", false, description = "Only eat enchanted golden apples")
+    private val onlyGoldenApples by setting("Only Golden Apples", false, description = "Only eat golden apples and enchanted golden apples")
+    private val autoSwitch by setting("Auto Switch", false, description = "Automatically switch to food in hotbar/inventory")
     private val pauseBaritone by setting("Pause Baritone", true)
-    private val swap by setting("Swap", false, description = "swaps to the best food")
-    private val eatWhileTakingDamage by setting("Eat While Taking Damage", true,
-        description = "Force eat when taking damage")
 
     private var lastSlot = -1
     private var eating = false
@@ -48,8 +48,18 @@ internal object AutoEatPlus : Module(
     private var lastTask: InventoryTask? = null
     private var wasTakingDamage = false
 
+    private enum class EatMode(override val displayName: CharSequence) : DisplayEnum {
+        DAMAGE("When Taking Damage"),
+        HEALTH("Below Health"),
+        ALWAYS("Always Eat")
+    }
+
     override fun isActive(): Boolean {
         return isEnabled && eating
+    }
+
+    override fun getHudInfo(): String {
+        return mode.displayString
     }
 
     init {
@@ -67,10 +77,8 @@ internal object AutoEatPlus : Module(
             }
 
             val isTakingDamage = player.hurtTime > 0
-            val shouldForceEat = eatWhileTakingDamage && isTakingDamage && !wasTakingDamage
             wasTakingDamage = isTakingDamage
 
-            // If we're currently eating, check if we should continue
             if (eating) {
                 val activeStack = player.getHeldItem(currentHand())
 
@@ -83,12 +91,12 @@ internal object AutoEatPlus : Module(
             }
 
             val hand = when {
-                !shouldEat() && !shouldForceEat -> null
+                !shouldEat() -> null
                 isValid(player.heldItemOffhand) -> EnumHand.OFF_HAND
                 isValid(player.heldItemMainhand) -> EnumHand.MAIN_HAND
-                swap -> {
+                autoSwitch -> {
                     if (swapToFood()) {
-                        startEating()
+                        // Will start eating on next tick after swap
                         return@safeListener
                     } else {
                         null
@@ -110,8 +118,13 @@ internal object AutoEatPlus : Module(
         return if (mc.player.heldItemOffhand.item is ItemFood) EnumHand.OFF_HAND else EnumHand.MAIN_HAND
     }
 
-    private fun SafeClientEvent.shouldEat() =
-        alwayseat || (health && player.scaledHealth < belowHealth)
+    private fun SafeClientEvent.shouldEat(): Boolean {
+        return when (mode) {
+            EatMode.ALWAYS -> player.canEat(true)
+            EatMode.HEALTH -> player.scaledHealth < belowHealth && player.canEat(true)
+            EatMode.DAMAGE -> player.hurtTime > 0 && player.canEat(true)
+        }
+    }
 
     private fun SafeClientEvent.eat(hand: EnumHand) {
         if (!player.isHandActive || player.activeHand != hand) {
@@ -146,13 +159,16 @@ internal object AutoEatPlus : Module(
     }
 
     private fun SafeClientEvent.swapToFood(): Boolean {
+        // First try to find food in hotbar
         lastSlot = player.inventory.currentItem
-        val hasFoodInSlots = swapToItem<ItemFood> { isValid(it) }
-
-        return if (hasFoodInSlots) {
+        
+        // Try to swap to food in hotbar first
+        val hasFoodInHotbar = swapToItem<ItemFood> { isValid(it) }
+        
+        return if (hasFoodInHotbar) {
             true
         } else {
-            lastSlot = -1
+            // If no food in hotbar, try to move from inventory
             moveFoodToHotbar()
         }
     }
@@ -180,15 +196,13 @@ internal object AutoEatPlus : Module(
         return item is ItemFood
                 && item != Items.CHORUS_FRUIT
                 && (eatBadFood || !isBadFood(itemStack, item))
-                && (!onlygapples || item == Items.GOLDEN_APPLE || item == Items.GOLDEN_CARROT)
-                && player.canEat(true)
+                && (!onlyGoldenApples || item == Items.GOLDEN_APPLE)
+                && player.canEat(mode == EatMode.ALWAYS)
     }
 
     private fun isBadFood(itemStack: ItemStack, item: ItemFood) =
         item == Items.ROTTEN_FLESH
                 || item == Items.SPIDER_EYE
                 || item == Items.POISONOUS_POTATO
-                || item == Items.FISH && (itemStack.metadata == 3 || itemStack.metadata == 2)
-
-
+                || (item == Items.FISH && (itemStack.metadata == 3 || itemStack.metadata == 2))
 }

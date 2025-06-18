@@ -9,17 +9,19 @@ import dev.fastmc.common.TickTimer
 import net.minecraft.init.Items
 import net.minecraft.init.MobEffects
 import net.minecraft.item.ItemStack
+import com.mojang.text2speech.Narrator;
+
 
 internal object LowItems : LabelHud(
     name = "LowItems",
     category = Category.COMBAT,
     description = "Warns when low on splash potions or beds"
 ) {
+    private final val narrator = Narrator.getNarrator()
     private val potionThreshold by setting("Potion Stack Threshold", 1.0f, 0.5f..3.0f, 0.1f)
     private val bedThreshold by setting("Bed Stack Threshold", 1.0f, 0.5f..3.0f, 0.1f)
     private val showPotionWarning by setting("Show Potion Warning", true)
     private val showBedWarning by setting("Show Bed Warning", true)
-
     private val updateTimer = TickTimer()
     private var cachedPotionCount = 0
     private var cachedBedCount = 0

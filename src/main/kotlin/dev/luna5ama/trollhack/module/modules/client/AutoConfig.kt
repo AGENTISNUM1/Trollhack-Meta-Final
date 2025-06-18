@@ -41,6 +41,7 @@ internal object AutoConfig : Module(
     private val configpmine by setting("Configure PacketMine", true, page.atValue(Page.COMBAT))
     private val combatconfig by setting("Configure Combat Settings", true, page.atValue(Page.COMBAT))
     private val configessentials by setting("Configure Essentials", true, page.atValue(Page.COMBAT), description = "Configures several other modules needed for combat")
+    private val enableneeded by setting("Enable essential modules", false, page.atValue(Page.COMBAT))
 
     // Movement Page
     private val configstep by setting("Configure Step", true, page.atValue(Page.MOVEMENT))
@@ -54,6 +55,10 @@ internal object AutoConfig : Module(
     private val packetminetheme by setting("Change Packet Mine", false, {page.value == Page.RENDER && configrender.value})
     private val holeesptheme by setting("Change HoleESP", true, {page.value == Page.RENDER && configrender.value})
     private val friendcolor by setting("Change Friend Color", false, {page.value == Page.RENDER && configrender.value})
+    private val selectioncolor by setting("Change Selection Color", false, {page.value == Page.RENDER && configrender.value})
+    private val chamscolor by setting("Change chams colors", false, {page.value == Page.RENDER && configrender.value})
+    private val bacolor by setting("Change BedAura color", false, {page.value == Page.RENDER && configrender.value})
+
 
     private val bgcolor = ColorRGB(3, 3, 3, 160)
     private var themecolor = ColorRGB(100, 100, 100)

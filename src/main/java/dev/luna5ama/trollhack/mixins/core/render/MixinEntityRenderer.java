@@ -2,7 +2,6 @@ package dev.luna5ama.trollhack.mixins.core.render;
 
 import dev.luna5ama.trollhack.event.events.render.Render2DEvent;
 import dev.luna5ama.trollhack.graphics.GlStateUtils;
-import dev.luna5ama.trollhack.gui.hudgui.elements.client.Notification;
 import dev.luna5ama.trollhack.module.modules.movement.ElytraFlight;
 import dev.luna5ama.trollhack.module.modules.player.BlockInteraction;
 import dev.luna5ama.trollhack.module.modules.render.AntiFog;
@@ -53,12 +52,6 @@ public class MixinEntityRenderer {
         Wrapper.getMinecraft().profiler.endSection();
     }
 
-    @Inject(method = "updateCameraAndRender", at = @At(value = "RETURN"))
-    public void updateCameraAndRender$Inject$RETURN(float partialTicks, long nanoTime, CallbackInfo ci) {
-        Wrapper.getMinecraft().profiler.endStartSection("trollNotification");
-        Notification.INSTANCE.render();
-        glUseProgram(0);
-    }
 
     @ModifyVariable(method = "orientCamera", at = @At(value = "STORE", ordinal = 0), ordinal = 0)
     public RayTraceResult orientCamera$ModifyVariable$0$STORE$0(RayTraceResult value) {

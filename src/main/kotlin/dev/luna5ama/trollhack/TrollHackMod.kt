@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger
 import org.lwjgl.opengl.Display
 import java.io.File
 
+
 @Mod(
     modid = TrollHackMod.ID,
     name = TrollHackMod.NAME,
@@ -59,10 +60,10 @@ class TrollHackMod {
     }
 
     companion object {
-        const val NAME = Metadata.NAME
-        const val ID = Metadata.ID
-        const val VERSION = Metadata.VERSION
-        const val DIRECTORY = ID
+        const val NAME = "TrollHack Meta"
+        const val ID = "trollhackmeta"
+        const val VERSION = "0.0.1"
+        const val DIRECTORY = "trollhack"
 
         @JvmField
         val title: String = Display.getTitle()

@@ -14,7 +14,7 @@ import kotlin.math.floor
 internal object CornerClip : Module(
     name = "Clip",
     description = "clips u in wall",
-    category = Category.WIZARD,
+    category = Category.META,
     modulePriority = 9999
 ) {
     private val delay by setting("Delay", 5, 1..10, 1)

@@ -38,7 +38,7 @@ import kotlin.math.*
 internal object HoleSnap : Module(
     name = "Hole Snap",
     description = "Move you into the hole nearby",
-    category = Category.COMBAT,
+    category = Category.MOVEMENT,
     modulePriority = 120
 ) {
     private val downRange by setting("Down Range", 5, 1..8, 1)

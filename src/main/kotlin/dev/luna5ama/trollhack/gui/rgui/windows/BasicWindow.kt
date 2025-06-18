@@ -9,9 +9,6 @@ import dev.luna5ama.trollhack.setting.configs.AbstractConfig
 import dev.luna5ama.trollhack.util.interfaces.Nameable
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
 
-/**
- * Window with rectangle rendering
- */
 open class BasicWindow(
     screen: IGuiScreen,
     name: CharSequence,
@@ -22,15 +19,15 @@ open class BasicWindow(
         super.onRender(absolutePos)
         WindowBlurShader.render(renderWidth, renderHeight)
         if (ClickGUI.titleBar) {
-            RenderUtils2D.drawRectFilled(0.0f, draggableHeight, renderWidth, renderHeight, ClickGUI.backGround)
+            RenderUtils2D.drawRoundedRectFilled(0.0f, draggableHeight, renderWidth, renderHeight, ClickGUI.radius, ClickGUI.backGround)
         } else {
-            RenderUtils2D.drawRectFilled(0.0f, 0.0f, renderWidth, renderHeight, ClickGUI.backGround)
+            RenderUtils2D.drawTopRoundedRectFilled(0.0f, 0.0f, renderWidth, renderHeight, ClickGUI.radius, ClickGUI.backGround)
         }
         if (ClickGUI.windowOutline) {
-            RenderUtils2D.drawRectOutline(0.0f, 0.0f, renderWidth, renderHeight, 1.0f, ClickGUI.primary.alpha(255))
+            RenderUtils2D.drawRoundedRectOutline(0.0f, 0.0f, renderWidth, renderHeight, ClickGUI.radius, 1.0f, ClickGUI.primary.alpha(255))
         }
         if (ClickGUI.titleBar) {
-            RenderUtils2D.drawRectFilled(0.0f, 0.0f, renderWidth, draggableHeight, ClickGUI.primary)
+            RenderUtils2D.drawTopRoundedRectFilled(0.0f, 0.0f, renderWidth, draggableHeight, ClickGUI.radius, ClickGUI.primary)
         }
     }
 }

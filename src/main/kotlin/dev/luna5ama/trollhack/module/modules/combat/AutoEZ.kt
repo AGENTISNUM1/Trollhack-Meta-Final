@@ -11,7 +11,6 @@ import dev.luna5ama.trollhack.event.events.combat.TotemPopEvent
 import dev.luna5ama.trollhack.event.listener
 import dev.luna5ama.trollhack.event.safeListener
 import dev.luna5ama.trollhack.event.safeParallelListener
-import dev.luna5ama.trollhack.gui.hudgui.elements.client.Notification
 import dev.luna5ama.trollhack.manager.managers.FriendManager
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
@@ -131,9 +130,8 @@ internal object AutoEZ : Module(
                 }
 
                 if (popNotification) {
-                    Notification.send(
-                        "${TextFormatting.RED}$playerName ${TextFormatting.RESET}popped a totem! (Total: $currentCount)",
-                        5000L
+                    NoSpamMessage.sendMessage(
+                        "$chatName ${TextFormatting.RED}$playerName ${TextFormatting.RESET}popped a totem! (Total: $currentCount)"
                     )
                 }
             }
@@ -231,7 +229,7 @@ internal object AutoEZ : Module(
             val replaced = randomMessage.replace(NAME_PLACEHOLDER, it.name)
             if (timer.tickAndReset(delay.value, TimeUnit.SECONDS)) {
                 if (notification) {
-                    Notification.send("${TextFormatting.RED}${it.name} ${TextFormatting.RESET}was killed by you", 5000L)
+                    NoSpamMessage.sendMessage("$chatName ${TextFormatting.RED}${it.name} ${TextFormatting.RESET}was killed by you")
                 }
 
                 sendServerMessage(replaced)

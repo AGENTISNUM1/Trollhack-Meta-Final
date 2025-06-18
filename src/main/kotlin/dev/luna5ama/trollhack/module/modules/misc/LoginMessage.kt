@@ -1,6 +1,5 @@
-package dev.luna5ama.trollhack.module.modules.chat
+package dev.luna5ama.trollhack.module.modules.misc
 
-import dev.luna5ama.trollhack.TrollHackMod
 import dev.luna5ama.trollhack.event.events.ConnectionEvent
 import dev.luna5ama.trollhack.event.events.TickEvent
 import dev.luna5ama.trollhack.event.listener
@@ -12,16 +11,11 @@ import dev.luna5ama.trollhack.util.text.MessageDetection
 import dev.luna5ama.trollhack.util.text.MessageSendUtils
 import dev.luna5ama.trollhack.util.text.MessageSendUtils.sendServerMessage
 import dev.luna5ama.trollhack.util.text.NoSpamMessage
-import dev.luna5ama.trollhack.util.threads.DefaultScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.io.File
-import java.util.concurrent.CopyOnWriteArrayList
 
 internal object LoginMessage : Module(
     name = "Login Message",
     description = "Sends a given message(s) to public chat on login.",
-    category = Category.CHAT,
+    category = Category.MISC,
     visible = false,
     modulePriority = 150
 ) {

@@ -55,7 +55,7 @@ import kotlin.math.hypot
 
 internal object HolePathFinder : Module(
     name = "Hole Path Finder",
-    category = Category.COMBAT,
+    category = Category.MOVEMENT,
     description = "I love hole"
 ) {
     private val moveMode by setting("Move Mode", MoveMode.NORMAL)

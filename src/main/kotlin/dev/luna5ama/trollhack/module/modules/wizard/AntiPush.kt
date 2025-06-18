@@ -39,7 +39,7 @@ import java.util.*
 @CombatManager.CombatModule
 internal object AntiPush : Module(
     name = "Anti Push",
-    category = Category.COMBAT,
+    category = Category.META,
     description = "Protects against piston traps",
     modulePriority = 150
 ) {

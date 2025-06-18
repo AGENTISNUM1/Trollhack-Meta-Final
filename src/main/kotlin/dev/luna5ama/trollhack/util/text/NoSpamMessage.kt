@@ -8,11 +8,11 @@ import net.minecraft.util.text.TextFormatting
 
 object NoSpamMessage : Helper {
     fun sendMessage(message: String) {
-        send(coloredName(TextFormatting.LIGHT_PURPLE, message), message.hashCode())
+        send(coloredName(TextFormatting.DARK_PURPLE, message), message.hashCode())
     }
 
     fun sendMessage(identifier: Any, message: String) {
-        send(coloredName(TextFormatting.LIGHT_PURPLE, message), identifier.hashCode())
+        send(coloredName(TextFormatting.DARK_PURPLE, message), identifier.hashCode())
     }
 
     fun sendWarning(message: String) {
@@ -38,6 +38,6 @@ object NoSpamMessage : Helper {
     }
 
     private fun coloredName(textFormatting: TextFormatting, message: String): String {
-        return "${TextFormatting.GRAY}[$textFormatting${TrollHackMod.NAME}${TextFormatting.GRAY}]${TextFormatting.RESET} $message"
+        return "${TextFormatting.GRAY}[$textFormatting${"Meta"}${TextFormatting.GRAY}]${TextFormatting.RESET} $message"
     }
 }

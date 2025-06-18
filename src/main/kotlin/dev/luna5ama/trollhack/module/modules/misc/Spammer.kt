@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.chat
+package dev.luna5ama.trollhack.module.modules.misc
 
 import dev.fastmc.common.TickTimer
 import dev.fastmc.common.TimeUnit
@@ -23,7 +23,7 @@ import kotlin.random.Random
 internal object Spammer : Module(
     name = "Spammer",
     description = "Spams text from a file on a set delay into the chat",
-    category = Category.CHAT,
+    category = Category.MISC,
     modulePriority = 100
 ) {
     private val modeSetting = setting("Order", Mode.RANDOM_ORDER)

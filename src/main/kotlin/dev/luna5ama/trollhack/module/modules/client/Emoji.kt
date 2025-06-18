@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.chat
+package dev.luna5ama.trollhack.module.modules.client
 
 import dev.fastmc.common.ceilToInt
 import dev.luna5ama.trollhack.graphics.GlStateUtils
@@ -7,7 +7,6 @@ import dev.luna5ama.trollhack.graphics.texture.MipmapTexture
 import dev.luna5ama.trollhack.manager.managers.EmojiManager
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.client.CustomFont
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
@@ -16,7 +15,7 @@ import org.lwjgl.opengl.GL11.*
 internal object Emoji : Module(
     name = "Emoji",
     description = "Add emojis to chat.",
-    category = Category.CHAT
+    category = Category.CLIENT
 ) {
     private val regex = ":(.+?):".toRegex()
 

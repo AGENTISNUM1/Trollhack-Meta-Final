@@ -143,7 +143,7 @@ internal object BedAura : Module(
     private val basePlaceRange by setting("BasePlace Range", 4.0f, 0.0f..8.0f, 0.5f, page.atValue(Page.GENERAL))
     private val basePlaceDelay by setting("BasePlace Delay", 20, 0..50, 5, page.atValue(Page.GENERAL))
     private val basePlaceColor by setting("BasePlace Color", ColorRGB(32, 255, 32), false, page.atValue(Page.GENERAL))
-    val oldbaseplace by setting("Use old baseplace", false)
+    val oldbaseplace by setting("Use old baseplace", false, page.atValue(Page.GENERAL))
 
     // Timing Settings
     var updateDelay by setting("Update Delay", 50, 5..250, 1, page.atValue(Page.TIMING))

@@ -32,7 +32,7 @@ internal object AutoConfig : Module(
     private val page = setting("Page", Page.COMBAT)
 
     // Combat Page
-    private val rotations by setting("Use Rotations", true, page.atValue(Page.COMBAT))
+    private val rotations by setting("Disable Rotations", true, page.atValue(Page.COMBAT))
     private val configpot by setting("Configure AutoPot", true, page.atValue(Page.COMBAT))
     private val potmode by setting("AutoPot Delay", PotMode.LOW_PING, { configpot && page.value == Page.COMBAT })
     private val configba by setting("Configure BedAura", true, page.atValue(Page.COMBAT))

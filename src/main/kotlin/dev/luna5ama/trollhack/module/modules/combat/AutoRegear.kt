@@ -73,7 +73,7 @@ internal object AutoRegear : Module(
     val shulkearBoxOnly by setting("Shulker Box Only", true)
     private val hideInventory by setting("Hide Inventory", false)
     private val closeInventory by setting("Close Inventory", false)
-    private val takeArmor by setting("Take Armor", false)
+    var takeArmor by setting("Take Armor", false)
     private val regearTimeout by setting("Regear Timeout", 500, 0..5000, 10)
     var clickDelayMs by setting("Click Delay ms", 10, 0..1000, 1)
     var postDelayMs by setting("Post Delay ms", 50, 0..1000, 1)
@@ -431,4 +431,8 @@ internal object AutoRegear : Module(
         closeAfterRegear = false
         renderPos = null
     }
+    fun toggleShulkerPlace() {
+        placeShulker = true
+    }
+
 }

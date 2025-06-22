@@ -16,7 +16,6 @@ import dev.luna5ama.trollhack.event.events.render.ResolutionUpdateEvent
 import dev.luna5ama.trollhack.graphics.GlStateUtils
 import dev.luna5ama.trollhack.graphics.ProjectionUtils
 import dev.luna5ama.trollhack.graphics.RenderUtils3D
-import dev.luna5ama.trollhack.gui.mc.TrollGuiChat
 import dev.luna5ama.trollhack.manager.managers.WorldManager
 import dev.luna5ama.trollhack.util.Wrapper
 import dev.luna5ama.trollhack.util.text.MessageDetection
@@ -83,9 +82,6 @@ internal object ForgeEventProcessor : ListenerOwner() {
         if (!mc.gameSettings.keyBindSneak.isKeyDown) {
             val prefix = CommandManager.prefix
             val typedChar = Keyboard.getEventCharacter().toString()
-            if (prefix.length == 1 && typedChar.equals(CommandManager.prefix, true)) {
-                mc.displayGuiScreen(TrollGuiChat(CommandManager.prefix))
-            }
         }
     }
 

@@ -32,9 +32,9 @@ internal object AutoArmor : Module(
     description = "Automatically equips armour",
     modulePriority = 500
 ) {
-    private val runInGui by setting("Run In GUI", true)
-    private val antiGlitchArmor by setting("Anti Glitch Armor", true)
-    private val stackedArmor by setting("Stacked Armor", false)
+    var runInGui by setting("Run In GUI", true)
+    var antiGlitchArmor by setting("Anti Glitch Armor", true)
+    var stackedArmor by setting("Stacked Armor", false)
     private val swapSlot by setting("Swap Slot", 9, 1..9, 1, { stackedArmor })
     private val blastProtectionLeggings by setting(
         "Blast Protection Leggings",

@@ -75,8 +75,9 @@ internal object AutoRegear : Module(
     private val closeInventory by setting("Close Inventory", false)
     var takeArmor by setting("Take Armor", false)
     private val regearTimeout by setting("Regear Timeout", 500, 0..5000, 10)
-    var clickDelayMs by setting("Click Delay ms", 10, 0..1000, 1)
-    var postDelayMs by setting("Post Delay ms", 50, 0..1000, 1)
+    var clickDelayMs by setting("Click Delay ms", 5, 0..1000, 1)
+    var postDelayMs by setting("Post Delay ms", 25, 0..1000, 1)
+    private val armorPriority by setting("Armor Priority", true, description = "Give armor tasks higher priority")
     var moveTimeoutMs by setting("Move Timeout ms", 100, 0..1000, 1)
     private val renderColor by setting("Render Color", ColorRGB(255, 255, 255))
     private val renderDelay by setting("Render Delay", 100, 0..1000, 10)
@@ -176,8 +177,11 @@ internal object AutoRegear : Module(
                 return@safeListener
             }
 
-            if (takeArmor(openContainer)) return@safeListener
+            // Prioritize armor tasks if enabled
+            if (armorPriority && takeArmor(openContainer)) return@safeListener
             if (doRegear(openContainer, itemArray)) return@safeListener
+            // Secondary armor check for lower priority
+            if (!armorPriority && takeArmor(openContainer)) return@safeListener
         }
 
         safeParallelListener<TickEvent.Post> {
@@ -328,7 +332,7 @@ internal object AutoRegear : Module(
                     playetItem is ItemArmor && playetItem.armorType == item.armorType
                 }) continue
 
-            if (!armorTimer.tickAndReset(100L)) {
+            if (!armorTimer.tickAndReset(20L)) {
                 timeoutTimer.time = Long.MAX_VALUE
                 return true
             }

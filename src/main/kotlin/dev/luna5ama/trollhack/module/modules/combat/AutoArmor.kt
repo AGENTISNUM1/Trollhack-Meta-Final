@@ -30,7 +30,7 @@ internal object AutoArmor : Module(
     name = "Auto Armor",
     category = Category.COMBAT,
     description = "Automatically equips armour",
-    modulePriority = 500
+    modulePriority = 9999
 ) {
     var runInGui by setting("Run In GUI", true)
     var antiGlitchArmor by setting("Anti Glitch Armor", true)
@@ -48,17 +48,31 @@ internal object AutoArmor : Module(
         description = "Swaps out armor at low durability"
     )
     private val duraThreshold by setting("Durability Threshold", 10, 1..50, 1, { !stackedArmor && armorSaver })
-    private val delay by setting("Delay", 2, 1..10, 1)
+    private val delay by setting("Delay", 1, 1..5, 1)
+    private val armorCheckInterval by setting("Check Interval", 5, 1..20, 1, description = "Ticks between armor checks (lower = faster)")
 
     private val moveTimer = TickTimer(TimeUnit.TICKS)
+    private val checkTimer = TickTimer(TimeUnit.TICKS)
     private var lastTask: InventoryTask? = null
+    private var cachedArmorValues = mutableMapOf<ItemStack, Float>()
+    private var lastInventoryHash = 0
 
     init {
         safeParallelListener<TickEvent.Post> {
             if (AutoMend.isActive() || (!runInGui && mc.currentScreen is GuiContainer) || !lastTask.executedOrTrue) return@safeParallelListener
+            
+            // Only check armor at specified intervals for performance
+            if (!checkTimer.tick(armorCheckInterval)) return@safeParallelListener
 
             val armorSlots = player.armorSlots
             val isElytraOn = player.chestSlot.stack.item == Items.ELYTRA
+            
+            // Clear cache if inventory changed
+            val currentInventoryHash = getInventoryHash()
+            if (currentInventoryHash != lastInventoryHash) {
+                cachedArmorValues.clear()
+                lastInventoryHash = currentInventoryHash
+            }
 
             // store slots and values of best armor pieces, initialize with currently equipped armor
             // Pair<Slot, Value>
@@ -74,7 +88,7 @@ internal object AutoArmor : Module(
             // equip better armor
             if (equipArmor(armorSlots, bestArmors)) {
                 moveTimer.reset()
-            } else if (antiGlitchArmor && moveTimer.tick(10) && player.totalArmorValue != player.armorSlots.sumOf {
+            } else if (antiGlitchArmor && moveTimer.tick(5) && player.totalArmorValue != player.armorSlots.sumOf {
                     getRawArmorValue(
                         it.stack
                     )
@@ -91,6 +105,17 @@ internal object AutoArmor : Module(
                 moveTimer.reset()
             }
         }
+    }
+    
+    private fun SafeClientEvent.getInventoryHash(): Int {
+        var hash = 1
+        for (slot in player.allSlots) {
+            val stack = slot.stack
+            if (!stack.isEmpty && stack.item is ItemArmor) {
+                hash = 31 * hash + stack.hashCode()
+            }
+        }
+        return hash
     }
 
 
@@ -116,16 +141,25 @@ internal object AutoArmor : Module(
     }
 
     private fun getArmorValue(itemStack: ItemStack): Float {
+        if (itemStack.isEmpty) return -1.0f
+        
+        // Use cached value if available
+        cachedArmorValues[itemStack]?.let { return it }
+        
         val item = itemStack.item
-        return if (item !is ItemArmor) {
+        val value = if (item !is ItemArmor) {
             -1.0f
         } else {
-            val value = item.damageReduceAmount * getProtectionModifier(itemStack)
+            val baseValue = item.damageReduceAmount * getProtectionModifier(itemStack)
 
             // Less weight for armor with low dura so it gets swaps out
-            if (!stackedArmor && armorSaver && itemStack.isItemStackDamageable && itemStack.duraPercentage < duraThreshold) value * 0.1f
-            else value
+            if (!stackedArmor && armorSaver && itemStack.isItemStackDamageable && itemStack.duraPercentage < duraThreshold) baseValue * 0.1f
+            else baseValue
         }
+        
+        // Cache the result
+        cachedArmorValues[itemStack] = value
+        return value
     }
 
     private val ItemStack.duraPercentage: Int

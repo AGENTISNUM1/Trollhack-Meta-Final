@@ -26,7 +26,7 @@ internal object AutoArmorRegear : Module(
     init {
         onEnable {
             AutoArmor.enable()
-            AutoArmor.antiGlitchArmor = true
+            AutoArmor.antiGlitchArmor = false
             AutoArmor.stackedArmor = true
             AutoArmor.runInGui = true
             AutoRegear.takeArmor = true

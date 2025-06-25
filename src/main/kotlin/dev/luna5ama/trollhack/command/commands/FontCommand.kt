@@ -9,7 +9,7 @@ object FontCommand : ClientCommand(
 ) {
     init {
         executeSafe {
-            NoSpamMessage.sendMessage("Available fonts: Comic, Geo, Gidole, Orbitron, Queen, Underdog, WinkySans")
+            NoSpamMessage.sendMessage("Available fonts: Comic, Geo, Gidole, Orbitron, Queen, Underdog, WinkySans, Jetbrains, Monofur")
         }
     }
 }

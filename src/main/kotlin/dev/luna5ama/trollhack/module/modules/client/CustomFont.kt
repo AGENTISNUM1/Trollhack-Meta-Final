@@ -1,6 +1,5 @@
 package dev.luna5ama.trollhack.module.modules.client
 
-import dev.fastmc.common.TimeUnit
 import dev.fastmc.common.ceilToInt
 import dev.luna5ama.trollhack.TrollHackMod
 import dev.luna5ama.trollhack.event.events.TickEvent
@@ -9,7 +8,6 @@ import dev.luna5ama.trollhack.graphics.font.GlyphCache
 import dev.luna5ama.trollhack.graphics.font.renderer.MainFontRenderer
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.util.delegate.AsyncCachedValue
 import dev.luna5ama.trollhack.util.text.NoSpamMessage
 import dev.luna5ama.trollhack.util.threads.onMainThread
 import org.lwjgl.opengl.Display
@@ -24,7 +22,7 @@ internal object CustomFont : Module(
     category = Category.CLIENT,
     alwaysEnabled = true
 ) {
-    val availableFonts = listOf("Orbitron", "Underdog", "WinkySans", "Gidole", "Geo", "Comic", "Queen")
+    val availableFonts = listOf("Orbitron", "Underdog", "WinkySans", "Gidole", "Geo", "Comic", "Queen", "Jetbrains", "Monofur")
 
     val fontName = setting("Font", "Orbitron")
     val overrideMinecraft by setting("Override Minecraft", false)

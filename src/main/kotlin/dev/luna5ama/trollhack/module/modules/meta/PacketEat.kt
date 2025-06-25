@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.wizard
+package dev.luna5ama.trollhack.module.modules.meta
 
 import dev.luna5ama.trollhack.event.events.PacketEvent
 import dev.luna5ama.trollhack.event.safeListener

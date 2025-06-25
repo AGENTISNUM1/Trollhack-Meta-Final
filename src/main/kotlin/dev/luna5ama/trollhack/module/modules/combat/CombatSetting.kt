@@ -23,7 +23,7 @@ import dev.luna5ama.trollhack.manager.managers.EntityManager
 import dev.luna5ama.trollhack.manager.managers.FriendManager
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.module.modules.wizard.AutoEatPlus
+import dev.luna5ama.trollhack.module.modules.meta.AutoEatPlus
 import dev.luna5ama.trollhack.process.PauseProcess
 import dev.luna5ama.trollhack.process.PauseProcess.pauseBaritone
 import dev.luna5ama.trollhack.process.PauseProcess.unpauseBaritone

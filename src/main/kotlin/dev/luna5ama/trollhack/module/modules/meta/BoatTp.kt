@@ -1,8 +1,7 @@
-package dev.luna5ama.trollhack.module.modules.wizard
+package dev.luna5ama.trollhack.module.modules.meta
 
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
-import dev.luna5ama.trollhack.setting.settings.impl.number.NumberSetting
 import net.minecraft.entity.Entity
 import net.minecraft.entity.item.EntityBoat
 import net.minecraft.network.Packet

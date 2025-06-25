@@ -1,13 +1,10 @@
-package dev.luna5ama.trollhack.module.modules.wizard
+package dev.luna5ama.trollhack.module.modules.meta
 
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
 import dev.luna5ama.trollhack.event.events.TickEvent
 import dev.luna5ama.trollhack.event.safeListener
-import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager
 import dev.luna5ama.trollhack.manager.managers.PlayerPacketManager.sendPlayerPacket
-import dev.luna5ama.trollhack.module.modules.combat.BedAura
-import dev.luna5ama.trollhack.util.math.RotationUtils
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
 import kotlin.math.floor
 

@@ -46,6 +46,12 @@ object MainFontRenderer : IFontRenderer {
                 "gidole" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Gidole.ttf").use {
                     Font.createFont(Font.TRUETYPE_FONT, it)
                 }
+                "jetbrains" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Jetbrains.ttf").use {
+                    Font.createFont(Font.TRUETYPE_FONT, it)
+                }
+                "monofur" -> this.javaClass.getResourceAsStream("/assets/trollhack/fonts/Monofur.ttf").use {
+                    Font.createFont(Font.TRUETYPE_FONT, it)
+                }
                 else -> defaultFont // Default to Orbitron
             }
         } catch (e: Exception) {

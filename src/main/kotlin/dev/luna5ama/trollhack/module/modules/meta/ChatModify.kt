@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.wizard
+package dev.luna5ama.trollhack.module.modules.meta
 
 import dev.fastmc.common.TickTimer
 import dev.fastmc.common.TimeUnit
@@ -33,7 +33,7 @@ internal object ChatModify : Module(
     private val timer = TickTimer(TimeUnit.SECONDS)
 
     private enum class Suffix() {
-        TROLLHACK, EARTHHACK, RUSHERHACK, KONAS, GAMESENSE, GSPLUSPLUS, METEOR, BOZE, NONE
+        META, TROLLHACK, EARTHHACK, RUSHERHACK, KONAS, PHOBOS, KAMI, GAMESENSE, GSPLUSPLUS, METEOR, BOZE, NONE
     }
     private enum class Seperator() {
         NORMAL, BAR, ARROW, NONE
@@ -80,7 +80,7 @@ internal object ChatModify : Module(
                 message = getprefix() + it.packet.message
             }
             if (antispambypass) {
-                message += generateRandomSuffix()
+                message += " [${generateRandomSuffix()}]"
             }
             if (suffix.value != Suffix.NONE) {
                 message += "${getseperator()} ${getchatsuffix()}"
@@ -119,10 +119,13 @@ internal object ChatModify : Module(
     }
 
     private fun getchatsuffix() = when (suffix.value) {
+        Suffix.META -> "爪乇ㄒ卂"
         Suffix.TROLLHACK -> "ＴＲＯＬＬＨＡＣＫ"
         Suffix.EARTHHACK -> "³ᵃʳᵗʰʰ⁴ᶜᵏ- 1.8.5"
         Suffix.RUSHERHACK -> "ʳᵘˢʰᵉʳʰᵃᶜᵏ"
         Suffix.KONAS -> "K o n a s"
+        Suffix.KAMI -> "ᴋᴀᴍɪ ʙʟᴜᴇ"
+        Suffix.PHOBOS -> "ᴘʜᴏʙᴏꜱ"
         Suffix.GAMESENSE -> "ɢᴀᴍᴇѕᴇɴѕᴇ"
         Suffix.GSPLUSPLUS -> "ᴳˢ⁺⁺"
         Suffix.METEOR -> "Meteor On Crack"

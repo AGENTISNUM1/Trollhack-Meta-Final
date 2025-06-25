@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.wizard
+package dev.luna5ama.trollhack.module.modules.meta
 
 import dev.fastmc.common.TickTimer
 import dev.luna5ama.trollhack.event.SafeClientEvent
@@ -20,7 +20,6 @@ import dev.luna5ama.trollhack.util.inventory.inventoryTask
 import dev.luna5ama.trollhack.util.inventory.operation.swapWith
 import dev.luna5ama.trollhack.util.inventory.slot.*
 import dev.luna5ama.trollhack.util.math.vector.Vec2f
-import dev.luna5ama.trollhack.util.world.getGroundLevel
 import net.minecraft.block.Block
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items

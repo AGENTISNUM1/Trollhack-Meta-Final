@@ -74,3 +74,18 @@ No official license applies. Use it, fork it, break it.
 
 To all of the trolled users out there, thank you for your continued support and for using TrollHack Meta. I will not be online 5b5t as much, and development of this client will be continued in private. If you have any questions or need help, feel free to reach out to me on Discord: **Wizard_11**. 
 
+## Credits:
+
+**Luna5ama**, made the original trollhack without which this project would not be possible.
+
+**Wizard_11** (me), added almost all of the extra features in the client.
+
+**CompileMarley**, who gave me some clients and provided some code.
+
+**Tkoq**, who bugtested the client extensively.
+
+**Absolutionist**, who provided some code and helped with some ideas.
+
+**Confio**, who gave many ideas for autopot and helped improve logic.
+
+

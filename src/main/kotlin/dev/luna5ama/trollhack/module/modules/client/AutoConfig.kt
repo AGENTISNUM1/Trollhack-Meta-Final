@@ -20,7 +20,7 @@ import dev.luna5ama.trollhack.module.modules.player.FastUse
 import dev.luna5ama.trollhack.module.modules.player.InventorySync
 import dev.luna5ama.trollhack.module.modules.player.PacketMine
 import dev.luna5ama.trollhack.module.modules.render.Nametags
-import dev.luna5ama.trollhack.module.modules.wizard.BetterPot
+import dev.luna5ama.trollhack.module.modules.meta.BetterPot
 import dev.luna5ama.trollhack.util.atValue
 
 internal object AutoConfig : Module(
@@ -113,7 +113,6 @@ internal object AutoConfig : Module(
                 BedAura.autoSetSpeed = true
                 BedAura.placeDelay = 31
                 BedAura.breakDelay = 35
-
             }
             BaMode.SWITCHSLOWER -> {
                 BedAura.timingMode = BedAura.TimingMode.SWITCH

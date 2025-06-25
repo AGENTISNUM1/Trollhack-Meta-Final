@@ -29,7 +29,7 @@ import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
 import dev.luna5ama.trollhack.module.modules.exploit.Bypass
 import dev.luna5ama.trollhack.module.modules.player.PacketMine
-import dev.luna5ama.trollhack.module.modules.wizard.LegacyBasePlace
+import dev.luna5ama.trollhack.module.modules.meta.LegacyBasePlace
 import dev.luna5ama.trollhack.util.Bind
 import dev.luna5ama.trollhack.util.EntityUtils.betterPosition
 import dev.luna5ama.trollhack.util.EntityUtils.eyePosition
@@ -67,7 +67,6 @@ import kotlinx.coroutines.launch
 import net.minecraft.block.BlockBed
 import net.minecraft.block.state.IBlockState
 import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.texture.Stitcher
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
 import net.minecraft.init.SoundEvents

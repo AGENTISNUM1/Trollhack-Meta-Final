@@ -1,4 +1,4 @@
-package dev.luna5ama.trollhack.module.modules.wizard
+package dev.luna5ama.trollhack.module.modules.meta
 
 import dev.fastmc.common.TickTimer
 import dev.fastmc.common.TimeUnit
@@ -8,7 +8,6 @@ import dev.luna5ama.trollhack.event.safeListener
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
 import dev.luna5ama.trollhack.module.modules.misc.Spammer
-import dev.luna5ama.trollhack.util.atTrue
 import dev.luna5ama.trollhack.util.extension.synchronized
 import dev.luna5ama.trollhack.util.text.MessageDetection
 import dev.luna5ama.trollhack.util.text.MessageSendUtils
@@ -18,7 +17,6 @@ import dev.luna5ama.trollhack.util.threads.DefaultScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
-import java.net.URL
 import kotlin.random.Random
 import kotlin.text.isNotBlank
 import kotlin.text.trim

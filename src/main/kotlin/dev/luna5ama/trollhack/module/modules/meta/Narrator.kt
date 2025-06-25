@@ -1,13 +1,11 @@
-package dev.luna5ama.trollhack.module.modules.wizard
+package dev.luna5ama.trollhack.module.modules.meta
 
 import dev.luna5ama.trollhack.module.Category
 import dev.luna5ama.trollhack.module.Module
 import com.mojang.text2speech.Narrator;
-import dev.luna5ama.trollhack.event.ClientEvent
 import dev.luna5ama.trollhack.event.events.ModuleToggleEvent
 import dev.luna5ama.trollhack.event.safeListener
 import dev.luna5ama.trollhack.module.modules.combat.BedAura
-import dev.luna5ama.trollhack.module.modules.combat.ZealotCrystalPlus
 
 internal object Narrator : Module(
     name = "Narrator",

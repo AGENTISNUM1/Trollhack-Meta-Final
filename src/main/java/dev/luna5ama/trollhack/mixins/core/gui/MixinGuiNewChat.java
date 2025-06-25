@@ -1,6 +1,6 @@
 package dev.luna5ama.trollhack.mixins.core.gui;
 
-import dev.luna5ama.trollhack.module.modules.wizard.ChatModify;
+import dev.luna5ama.trollhack.module.modules.meta.ChatModify;
 import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.util.text.ITextComponent;
